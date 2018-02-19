@@ -1,3 +1,7 @@
 ﻿  face_detection.cpp
+c:\users\emil wåreus\onedrive\skola\intellegent system design\face_detection\face_detection\face_detection.cpp(25): warning C4101: 'capture': unreferenced local variable
+c:\users\emil wåreus\onedrive\skola\intellegent system design\face_detection\face_detection\face_detection.cpp(82): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\emil wåreus\onedrive\skola\intellegent system design\face_detection\face_detection\face_detection.cpp(83): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+c:\users\emil wåreus\onedrive\skola\intellegent system design\face_detection\face_detection\face_detection.cpp(93): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   face_detection.vcxproj -> C:\Users\Emil Wåreus\OneDrive\Skola\Intellegent System Design\Face_detection\face_detection\x64\Debug\face_detection.exe
   face_detection.vcxproj -> C:\Users\Emil Wåreus\OneDrive\Skola\Intellegent System Design\Face_detection\face_detection\x64\Debug\face_detection.pdb (Partial PDB)
