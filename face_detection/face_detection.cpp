@@ -21,7 +21,7 @@ RNG rng(12345);
 
 /** @function main */
 int main(int argc, const char** argv)
-{
+{1
 	CvCapture* capture;
 	Mat frame;
 
