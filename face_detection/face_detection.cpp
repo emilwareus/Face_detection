@@ -21,7 +21,11 @@ RNG rng(12345);
 
 /** @function main */
 int main(int argc, const char** argv)
-{1
+{
+	int camera = 1;
+	if (argc == 2) {
+		camera = atoi(argv[1]);
+	}
 	CvCapture* capture;
 	Mat frame;
 
@@ -30,7 +34,7 @@ int main(int argc, const char** argv)
 	if (!eyes_cascade.load(eyes_cascade_name)) { printf("--(!)Error loading\n"); return -1; };
 
 	//-- 2. Read the video stream
-	VideoCapture stream1(1);   //0 is the id of video device.0 if you have only one camera.
+	VideoCapture stream1(camera);   //0 is the id of video device.0 if you have only one camera.
 
 	if (!stream1.isOpened()) { //check if video device has been initialised
 		cout << "cannot open camera";
