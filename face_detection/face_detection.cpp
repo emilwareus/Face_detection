@@ -114,6 +114,7 @@ void detectAndDisplay(Mat frame, bool cropFace = false)
 		Mat faceROI = frame_gray(faces[i]);
     if (cropFace) {
       imshow(window_name, faceROI);
+    } else {
         ellipse(frame, center, Size(faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
         std::vector<Rect> eyes;
         //-- In each face, detect eyes
@@ -130,6 +131,7 @@ void detectAndDisplay(Mat frame, bool cropFace = false)
 	  imshow(window_name, frame);
   }
 }
+
 void detectAndSave(Mat frame)
 {
 	std::vector<Rect> faces;
@@ -144,10 +146,12 @@ void detectAndSave(Mat frame)
 	for (size_t i = 0; i < faces.size(); i++)
 	{
 		Mat faceROI = frame_gray(faces[i]);
+    Mat faceCropped;
+    resize(faceROI, faceCropped, Size(100,100), 0, 0);
     time_t result = time(nullptr);
     stringstream ss;
     ss << result;
-    imwrite("images/"+ss.str()+".jpg", faceROI);
+    imwrite("images/"+ss.str()+".jpg", faceCropped);
     cout << "Saving image:" << ss.str()+".jpg";  
 	}
 }
