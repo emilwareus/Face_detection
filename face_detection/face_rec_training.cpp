@@ -9,7 +9,7 @@ using namespace std;
 using namespace cv;
 
 Mat subtractMean(Mat mat);
-Mat covMatrix(Mat mat);
+Mat covMatrix(Mat mat, bool isMeanSubtracted = true);
 Mat pca(Mat mat);
 
 const string searchPattern = "images/*.jpg";
@@ -17,43 +17,73 @@ const string searchPattern = "images/*.jpg";
 /** Function Headers */
 int main(int argc, const char** argv)
 {
-  vector<Mat> featureVectors;
-  String path("images/*.jpg"); //select only jpg
+  // Read images from a folder
+  String path(searchPattern); //select only jpg
   vector<String> fn;
   vector<Mat> images;
   cv::glob(path,fn,true); // recurse
-  cout << fn.size() << endl;
+  
   for (size_t k=0; k<fn.size(); ++k)
   {
-       Mat im = imread(fn[k], 0);
-       if (im.empty()) continue; //only proceed if sucsessful
-       // you probably want to do some preprocessing
+      // Read the raw image, convert the matrix to float so we can perform PCA
+       Mat raw_im = imread(fn[k], 0);
+       if (raw_im.empty()) continue; //only proceed if sucsessful
+       Mat im;
+       raw_im.convertTo(im, CV_32F);
+       // Flatten image to row vector
        Mat flattened = im.reshape(1,1);
-       transpose(flattened, flattened);
        images.push_back(flattened);
   }
-  // Read some images/
-  // Concatenate images to single matrix
-  cout << images.at(0).at<float>(0,0) << endl;
+  
+  // Concatenate row vectors
   Mat stacked;
-  hconcat(images, stacked);
-  cout << stacked.rows << endl << stacked.cols << endl;
-  cout << stacked.at<float>(500,0) << endl;
-  Mat meanAdjust = subtractMean(stacked);
-  cout << meanAdjust.at<float>(500,0) << endl;
-  waitKey(0);
+  vconcat(images, stacked);
+  pca(stacked);
+//  Mat meanAdjust = subtractMean(stacked);
+//  cout << meanAdjust.rows << "   " << meanAdjust.cols << endl;
+//  Mat covarMatrix = covMatrix(meanAdjust);
+//  cout << covarMatrix.rows << "   " << covarMatrix.cols;
   return 0;
 }
 
-
+// For a NxM matrix, subtracts the columwise mean from all M columns
 Mat subtractMean(Mat mat) {
-  Mat colMean;
+  Mat rowMean;
   Mat repeated;
-  reduce(mat, colMean, 1, CV_REDUCE_AVG);
-  Mat meanSubtracted = repeat(colMean, 1, 5);
-  repeated = repeat(colMean,1, mat.cols);
-  cout << repeated.rows << "    " << repeated.cols << endl;
-  cout << mat.rows << "    " << mat.cols << endl;
+  // Get row vector with means for each column
+  reduce(mat, rowMean, 0, CV_REDUCE_AVG);
+  Mat meanSubtracted = repeat(rowMean, 1, 5);
+  // Tile the means for subtraction
+  repeated = repeat(rowMean,mat.rows, 1);
   subtract(mat, repeated , meanSubtracted); 
   return meanSubtracted;
+}
+
+// Calculate the covariance matrix for a matrix with row feature vectors
+Mat covMatrix(Mat mat, bool isMeanSubtracted) {
+  Mat covar;
+  Mat meanRow;
+  if (isMeanSubtracted) {
+    meanRow = Mat::zeros(1, mat.cols, CV_32F);
+  } else {
+    reduce(mat, meanRow, 0, CV_REDUCE_AVG);
+    meanRow = repeat(meanRow, mat.rows, 1);
+  }
+  calcCovarMatrix(mat, covar, meanRow, COVAR_COLS, CV_32F);
+  return covar;
+}
+
+Mat pca(Mat mat) {
+  Mat meanAdjust = subtractMean(mat);
+  cout << "Calculating covariance..." << endl;
+  Mat covariance = covMatrix(mat);
+  Mat eigenvals;
+  Mat eigenvecs;
+  cout << "Calculating eigen..." << endl;
+  eigen(covariance, eigenvals, eigenvecs);
+  
+  for (int i = 0; i < eigenvals.rows; i++) {
+    cout << eigenvals.at<float>(i, 0) << "   ";
+  }
+  return eigenvecs;
 }
