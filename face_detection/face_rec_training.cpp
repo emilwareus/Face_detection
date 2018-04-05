@@ -4,6 +4,12 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <stdexcept>
+using namespace std;
+
 
 using namespace std;
 using namespace cv;
@@ -117,3 +123,63 @@ Mat pca(Mat mat, bool isColumnFeatures) {
   return eigenvecs;
 }
 
+
+/**
+Reads a CSV file with "filename" with the eigenvalues.
+The CSV needs to be structured:
+nrCol
+nrRow
+X;X;X;X;X;X....
+X;X;X;X;X;X....
+.
+.
+.
+
+Returns the read CSV in a 2d vector format in string.
+*/
+vector< vector<string> > laod_pretrained(const string& filename) {
+	string line;
+	ifstream file(filename.c_str());
+	string delimiter = ";";
+	string token, token_row;
+
+	getline(file, line, ',');
+	int col = stoi(line.substr(0, line.find(delimiter)));
+	line.erase(0, col);
+	int row = stoi(line.substr(0, line.find(delimiter)));
+	line.erase(0, col + 1);
+
+
+	vector<vector<string>> output_matrix(row, vector<string>(col));
+
+
+	int i = 0;
+	size_t pos_row = 0;
+
+	while ((pos_row = line.find('\n')) != string::npos) {
+
+		if (pos_row != 0) {
+			token_row = line.substr(0, pos_row);
+			size_t pos = 0;
+			int j = 0;
+
+			while ((pos = token_row.find(delimiter)) != string::npos) {
+				token = token_row.substr(0, pos);
+				token_row.erase(0, pos + delimiter.length());
+				output_matrix[i][j] = token;
+				j++;
+
+			}
+			token = token_row.substr(0, pos);
+			token_row.erase(0, pos + delimiter.length());
+			output_matrix[i][j] = token;
+			cout << endl;
+			i++;
+		}
+		line.erase(0, pos_row + 1);
+
+	}
+
+
+	return output_matrix;
+}
