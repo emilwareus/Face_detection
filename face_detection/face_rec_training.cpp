@@ -183,3 +183,24 @@ vector< vector<string> > laod_pretrained(const string& filename) {
 
 	return output_matrix;
 }
+
+
+void laod_pretrained(vector< vector<string> > save_matrix, const string& filename) {
+
+	int rows = save_matrix.size();
+	int cols = save_matrix[0].size();
+
+	ofstream myfile;
+	myfile.open(filename);
+	myfile << cols << "\n";
+	myfile << rows << "\n";
+
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			myfile << save_matrix[i][j] << ";";
+		}
+		myfile << "\n";
+	}
+	myfile.close();
+
+}
