@@ -14,6 +14,22 @@ Mat pca(Mat mat);
 
 const string searchPattern = "images/*.jpg";
 
+Mat pcaOpencv(Mat mat) {
+  cout << "PCA...";
+  PCA pca(mat, Mat(), PCA::DATA_AS_COL, 1);
+  Mat eigenvalues = pca.eigenvalues.clone();
+  cout << eigenvalues.rows << " " << eigenvalues.cols << endl;
+  Mat eigenvectors = pca.eigenvectors.clone();
+  cout << eigenvectors.rows << " " << eigenvectors.cols << endl;
+  cout << pca.mean.rows << "   " << pca.mean.cols << endl;
+  Mat a = pca.mean.reshape(1, 100 / 255.0);
+  cout << a.at<float>(0,0) << endl;
+  cout << a.rows << "   " << a.cols << endl;
+  imshow("asdf", a);
+  waitKey(0);
+  return mat;
+}
+
 /** Function Headers */
 int main(int argc, const char** argv)
 {
@@ -30,14 +46,16 @@ int main(int argc, const char** argv)
        if (raw_im.empty()) continue; //only proceed if sucsessful
        Mat im;
        raw_im.convertTo(im, CV_32F);
-       // Flatten image to row vector
-       Mat flattened = im.reshape(1,1);
+       // Flatten image to column vector
+       Mat flattened = im.reshape(1,1).t();
        images.push_back(flattened);
   }
   
   // Concatenate row vectors
   Mat stacked;
-  vconcat(images, stacked);
+  hconcat(images, stacked);
+  cout << stacked.rows << "    " << stacked.cols;
+  pcaOpencv(stacked);
   pca(stacked);
 //  Mat meanAdjust = subtractMean(stacked);
 //  cout << meanAdjust.rows << "   " << meanAdjust.cols << endl;
@@ -68,8 +86,11 @@ Mat covMatrix(Mat mat, bool isMeanSubtracted) {
   } else {
     reduce(mat, meanRow, 0, CV_REDUCE_AVG);
     meanRow = repeat(meanRow, mat.rows, 1);
+    subtract(mat, meanRow, mat); 
   }
-  calcCovarMatrix(mat, covar, meanRow, COVAR_COLS, CV_32F);
+  // calcCovarMatrix(mat, covar, meanRow, COVAR_COLS, CV_32F);
+  covar = (1/mat.cols) * (mat * mat.t());
+  cout << covar.rows << covar.cols; 
   return covar;
 }
 
@@ -87,3 +108,4 @@ Mat pca(Mat mat) {
   }
   return eigenvecs;
 }
+
