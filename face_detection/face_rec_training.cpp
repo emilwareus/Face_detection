@@ -21,18 +21,24 @@ Mat pca(Mat mat, bool isColumnFeatures = true);
 const string searchPattern = "images/*.jpg";
 
 Mat pcaOpencv(Mat mat) {
-  cout << "PCA...";
+  cout << "PCA..." << endl;
   PCA pca(mat, Mat(), PCA::DATA_AS_COL, 200);
   Mat eigenvalues = pca.eigenvalues.clone();
-//   cout << eigenvalues.rows << " " << eigenvalues.cols << endl;
   Mat eigenvectors = pca.eigenvectors.clone();
-//  cout << eigenvectors.rows << " " << eigenvectors.cols << endl;
-//  cout << pca.mean.rows << "   " << pca.mean.cols << endl;
+  cout << "EIGENVECTORS: " << endl << eigenvectors.rows << " " << eigenvectors.cols << endl;
+  cout << "MEAN: " << endl << pca.mean.rows << "   " << pca.mean.cols << endl;
   Mat a = eigenvectors.reshape(1, 100);
   Mat mean = pca.mean.col(0).reshape(1, 100);
-  cout << a.rows << "   " << a.cols << endl << mean.rows << "   " << mean.cols << endl;;
+  Mat covariance;
+  calcCovarMatrix(mat, covariance, pca.mean, CV_COVAR_NORMAL | CV_COVAR_COLS, CV_32F);
+  cout << "COVARIANCE:" << endl;
+  for (int i =0; i < 10; i++) {
+    cout << covariance.at<float>(i, 0) << "    ";
+  }
+  cout << endl << "EIGEN: " << endl; 
+//  cout << a.rows << "   " << a.cols << endl << mean.rows << "   " << mean.cols << endl;;
   for (int i = 0; i < eigenvalues.rows; i++) {
-    cout << eigenvalues.at<float>(i, 0) << "   ";
+    cout << eigenvalues.at<float>(i, 0) << endl;
   }
 //  imshow("asdf", mean.t() * a / 255 );
 //  waitKey(0);
@@ -63,13 +69,9 @@ int main(int argc, const char** argv)
   // Concatenate row vectors
   Mat stacked;
   hconcat(images, stacked);
-  cout << stacked.rows << "    " << stacked.cols;
+  // cout << stacked.rows << "    " << stacked.cols;
   pcaOpencv(stacked);
   Mat eigenvectors = pca(stacked, true);
-  //  Mat meanAdjust = subtractMean(stacked);
-  //  cout << meanAdjust.rows << "   " << meanAdjust.cols << endl;
-  //  Mat covarMatrix = covMatrix(meanAdjust);
-  //  cout << covarMatrix.rows << "   " << covarMatrix.cols;
   return 0;
 }
 
@@ -104,7 +106,7 @@ Mat covMatrix(Mat mat, bool isMeanSubtracted, bool isColumnMean) {
     mat = subtractMean(mat, isColumnMean);
   }
   // calcCovarMatrix(mat, covar, meanRow, COVAR_COLS, CV_32F);
-  covar = (1/mat.cols) * (mat * mat.t());
+  covar = (1.0/mat.cols) * (mat * mat.t());
   cout << covar.rows << covar.cols; 
   return covar;
 }
@@ -112,13 +114,16 @@ Mat covMatrix(Mat mat, bool isMeanSubtracted, bool isColumnMean) {
 Mat pca(Mat mat, bool isColumnFeatures) {
   cout << "Calculating covariance..." << endl;
   Mat covariance = covMatrix(mat, false, isColumnFeatures);
+  for (int i =0; i < 10; i++) {
+    cout << covariance.at<float>(i, 0) << "    ";
+  }
   Mat eigenvals;
   Mat eigenvecs;
   cout << "Calculating eigen..." << endl;
   eigen(covariance, eigenvals, eigenvecs);
   
-  for (int i = 0; i < eigenvals.rows; i++) {
-    cout << eigenvals.at<float>(i, 0) << "   ";
+  for (int i = 0; i < 5; i++) {
+    cout << eigenvals.at<float>(i, 0) << "   " << endl;
   }
   return eigenvecs;
 }
