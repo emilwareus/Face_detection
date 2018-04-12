@@ -183,6 +183,11 @@ Mat pca(Mat mat, bool isColumnFeatures) {
 
 
 /**
+@filname is the relative path to the file
+@*values is a pointer to the matrix with eigen-faces (&values)
+@*labels is the vector with labels of the eigen-faces (&labes) 
+Values are loaded into theses variables
+
 Reads a CSV file with "filename" with the eigenvalues.
 The CSV needs to be structured:
 nrCol
@@ -260,7 +265,12 @@ void laod_pretrained(const string& filename, Mat *values, vector<string> * label
 }
 
 
-
+/*
+@filname is the relative path to the file
+@*save_matrix is a pointer to the matrix with eigen-faces (&values)
+@*labels is the vector with labels of the eigen-faces (&labes)
+Note that labels and save_matrix needs to be in the same order
+*/
 void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& filename) {
 
 	int rows = (*save_matrix).rows;
