@@ -24,6 +24,9 @@ for i in unique_names:
       image = image[rect[1]:rect[3], rect[0]:rect[2]]
       image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
       resized = cv2.resize(image, (100, 100))
+      if np.mean(image) < 25:
+        print "White image?"
+        continue
       cv2.imwrite("images/{}_{}.jpg".format(i, count), resized)
       count +=1
     except urllib2.HTTPError:

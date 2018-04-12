@@ -12,9 +12,9 @@
 using namespace std;
 using namespace cv;
 
-#define EIGEN_FACE_COUNT 5
+#define EIGEN_FACE_COUNT 10
 
-Mat subtractMean(Mat mat);
+Mat subtractMean(Mat mat, bool isColumnFeatures = true);
 Mat covMatrix(Mat mat, bool isMeanSubtracted = true);
 Mat pca(Mat mat, bool isColumnFeatures = true);
 
@@ -29,13 +29,23 @@ Mat pcaOpencv(Mat mat) {
   Mat mean = pca.mean.col(0).reshape(1, 100);
   Mat covariance;
   cout << endl << "EIGEN: " << endl; 
-//  cout << a.rows << "   " << a.cols << endl << mean.rows << "   " << mean.cols << endl;;
-  for (int i = 0; i < eigenvalues.rows; i++) {
+  for (int i = 0; i < 5; i++) {
     cout << eigenvalues.at<float>(i, 0) << endl;
   }
-//  imshow("asdf", mean.t() * a / 255 );
-//  waitKey(0);
-  return eigenvectors;
+  Mat meanSubtracted = subtractMean(mat, true);
+  
+  vector<Mat> eigenfaces;
+  for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
+    // reshape eigenvector to 100x100
+    Mat face = eigenvectors.row(i).t();
+    eigenfaces.push_back(face);
+  }
+  Mat principleEigenfaces;
+  hconcat(eigenfaces, principleEigenfaces);
+  cout << meanSubtracted.rows << "  " << meanSubtracted.cols << endl;
+  cout << principleEigenfaces.rows << "  " << principleEigenfaces.cols << endl;
+  Mat datasetReduced = principleEigenfaces.t() * meanSubtracted; 
+  return datasetReduced;
 }
 
 /** Function Headers */
@@ -66,20 +76,13 @@ int main(int argc, const char** argv)
   Mat stacked;
   hconcat(images, stacked);
   // cout << stacked.rows << "    " << stacked.cols;
-  Mat testEigen = pcaOpencv(stacked);
-  Mat eigenvectors = pca(stacked, true);
-  vector<Mat> eigenfaces;
-  for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
-    // reshape eigenvector to 100x100
-    Mat face = eigenvectors.row(i).reshape(1, 100) / 255.0;
-    eigenfaces.push_back(face);
-  }
-  cout << eigenfaces.at(0).rows << "   " << eigenfaces.at(0).cols << endl;
-  imshow("Window", eigenfaces.at(0));
-  waitKey(0);
+  // Mat testEigen = pcaOpencv(stacked);
+  // Get the transformed dataset
+  Mat transformedDataset = pca(stacked, true);
   return 0;
 }
 */
+
 
 
 // For a NxM matrix, subtracts the columwise mean from all M columns
@@ -113,14 +116,16 @@ Mat covMatrix(Mat mat, bool isMeanSubtracted, bool isColumnMean) {
     mat = subtractMean(mat, isColumnMean);
   }
   // calcCovarMatrix(mat, covar, meanRow, COVAR_COLS, CV_32F);
-  covar = (1.0/mat.cols) * (mat * mat.t());
+  covar = (1.0/(mat.cols)) * (mat * mat.t());
   cout << covar.rows << covar.cols; 
   return covar;
 }
 
 Mat pca(Mat mat, bool isColumnFeatures) {
+  Mat meanSubtracted;
+  meanSubtracted = subtractMean(mat, isColumnFeatures);
   cout << "Calculating covariance..." << endl;
-  Mat covariance = covMatrix(mat, false, isColumnFeatures);
+  Mat covariance = covMatrix(meanSubtracted, true , isColumnFeatures);
   for (int i =0; i < 10; i++) {
     cout << covariance.at<float>(i, 0) << "    ";
   }
@@ -132,7 +137,16 @@ Mat pca(Mat mat, bool isColumnFeatures) {
   for (int i = 0; i < 5; i++) {
     cout << eigenvals.at<float>(i, 0) << "   " << endl;
   }
-  return eigenvecs;
+  vector<Mat> eigenfaces;
+  for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
+    // reshape eigenvector to 100x100
+    Mat face = eigenvecs.row(i).t();
+    eigenfaces.push_back(face);
+  }
+  Mat principleEigenfaces;
+  hconcat(eigenfaces, principleEigenfaces);
+  Mat datasetReduced = principleEigenfaces.t() * meanSubtracted; 
+  return datasetReduced;
 }
 
 
@@ -197,7 +211,7 @@ vector< vector<string> > laod_pretrained(const string& filename) {
 }
 
 
-void laod_pretrained(vector< vector<string> > save_matrix, const string& filename) {
+void save_pretrained(vector< vector<string> > save_matrix, const string& filename) {
 
 	int rows = save_matrix.size();
 	int cols = save_matrix[0].size();
