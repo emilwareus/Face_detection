@@ -12,7 +12,7 @@
 using namespace std;
 using namespace cv;
 
-#define EIGEN_FACE_COUNT 10
+#define EIGEN_FACE_COUNT 200
 
 Mat subtractMean(Mat mat, bool isColumnFeatures = true);
 Mat covMatrix(Mat mat, bool isMeanSubtracted = true);
@@ -48,21 +48,50 @@ Mat pcaOpencv(Mat mat) {
   return datasetReduced;
 }
 
+string colVecToString(Mat mat) { 
+  stringstream ss;
+  for (int i = 0; i < mat.rows; i++) {
+    ss << mat.at<float>(i, 0);
+    if (i < mat.rows - 1) {
+      ss << ";";
+    } 
+  }
+  return ss.str();
+}
+
+vector<string> split(const string &s, char delim) {
+    stringstream ss(s);
+    string item;
+    vector<string> tokens;
+    while (getline(ss, item, delim)) {
+        tokens.push_back(item);
+    }
+    return tokens;
+}
+
 /** Function Headers */
-/*
 int main(int argc, const char** argv)
 {
   // Read images from a folder
   String path(searchPattern); //select only jpg
   vector<String> fn;
   vector<Mat> images;
+  vector<string> names;
   cv::glob(path,fn,true); // recurse
   
   for (size_t k=0; k<fn.size(); ++k)
   {
       // Read the raw image, convert the matrix to float so we can perform PCA
        Mat raw_im = imread(fn[k], 0);
+      
+      // Dealing with getting the label from filename 
        if (raw_im.empty()) continue; //only proceed if sucsessful
+       size_t lastindex = fn[k].size()-11;
+       size_t lastindexslash = fn[k].find("/")+1;
+       string rawname = fn[k].substr(lastindexslash, lastindex);
+       names.push_back(rawname);
+
+      // Convert image to 32F matrix, then resize to 100x100 image
        Mat im;
        raw_im.convertTo(im, CV_32F);
        Mat resized;
@@ -72,17 +101,16 @@ int main(int argc, const char** argv)
        images.push_back(flattened);
   }
   
-  // Concatenate row vectors
+  // Concatenate row vector (Will have 10000 * K matrix)
   Mat stacked;
   hconcat(images, stacked);
   // cout << stacked.rows << "    " << stacked.cols;
   // Mat testEigen = pcaOpencv(stacked);
   // Get the transformed dataset
   Mat transformedDataset = pca(stacked, true);
+  // transformedDataset will be NUM_EIGEN_FACES x Training Examples matrix
   return 0;
 }
-*/
-
 
 
 // For a NxM matrix, subtracts the columwise mean from all M columns
@@ -115,36 +143,40 @@ Mat covMatrix(Mat mat, bool isMeanSubtracted, bool isColumnMean) {
   if (!isMeanSubtracted) {
     mat = subtractMean(mat, isColumnMean);
   }
-  // calcCovarMatrix(mat, covar, meanRow, COVAR_COLS, CV_32F);
   covar = (1.0/(mat.cols)) * (mat * mat.t());
   cout << covar.rows << covar.cols; 
   return covar;
 }
 
 Mat pca(Mat mat, bool isColumnFeatures) {
+  // Adust the row mean to get centred matrix
   Mat meanSubtracted;
   meanSubtracted = subtractMean(mat, isColumnFeatures);
   cout << "Calculating covariance..." << endl;
+  // Calculates covariance matrix
   Mat covariance = covMatrix(meanSubtracted, true , isColumnFeatures);
-  for (int i =0; i < 10; i++) {
-    cout << covariance.at<float>(i, 0) << "    ";
-  }
   Mat eigenvals;
   Mat eigenvecs;
+  // Calculates eigenvalues
   cout << "Calculating eigen..." << endl;
   eigen(covariance, eigenvals, eigenvecs);
   
+  // Print some eigenvalues for sanity check 
   for (int i = 0; i < 5; i++) {
     cout << eigenvals.at<float>(i, 0) << "   " << endl;
   }
+  
+  // Take the top EIGEN_FACE_COUNT eigenfaces (Already sorted)
   vector<Mat> eigenfaces;
   for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
     // reshape eigenvector to 100x100
     Mat face = eigenvecs.row(i).t();
     eigenfaces.push_back(face);
   }
+  // Concatenates the eigenfaces 
   Mat principleEigenfaces;
   hconcat(eigenfaces, principleEigenfaces);
+  // Rduce dataset to the EIGEN_FACE_COUNT dimensions
   Mat datasetReduced = principleEigenfaces.t() * meanSubtracted; 
   return datasetReduced;
 }
@@ -230,14 +262,12 @@ void save_pretrained(vector< vector<string> > save_matrix, const string& filenam
 	myfile.close();
 
 }
-
-
 /*
 float euclidean_distance(vector<String> v1, vector<String>  v2) {
-	float dist = 0;
-	for (int i = 0; i < v1.size(); i++) {
-		dist += (v1[i] - v2[i])*(v1[i] - v2[i]);
-	}
-	return sqrt(dist);
+       float dist = 0;
+       for (int i = 0; i < v1.size(); i++) {
+               dist += (v1[i] - v2[i])*(v1[i] - v2[i]);
+       }
+       return sqrt(dist);
 
 }*/
