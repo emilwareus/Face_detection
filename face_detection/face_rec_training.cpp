@@ -8,11 +8,11 @@
 #include <fstream>
 #include <vector>
 #include <stdexcept>
-using namespace std;
-
 
 using namespace std;
 using namespace cv;
+
+#define EIGEN_FACE_COUNT 5
 
 Mat subtractMean(Mat mat);
 Mat covMatrix(Mat mat, bool isMeanSubtracted = true);
@@ -21,20 +21,13 @@ Mat pca(Mat mat, bool isColumnFeatures = true);
 const string searchPattern = "images/*.jpg";
 
 Mat pcaOpencv(Mat mat) {
-  cout << "PCA..." << endl;
   PCA pca(mat, Mat(), PCA::DATA_AS_COL, 200);
   Mat eigenvalues = pca.eigenvalues.clone();
   Mat eigenvectors = pca.eigenvectors.clone();
-  cout << "EIGENVECTORS: " << endl << eigenvectors.rows << " " << eigenvectors.cols << endl;
-  cout << "MEAN: " << endl << pca.mean.rows << "   " << pca.mean.cols << endl;
   Mat a = eigenvectors.reshape(1, 100);
+  cout << a.at<float>(0,0);
   Mat mean = pca.mean.col(0).reshape(1, 100);
   Mat covariance;
-  calcCovarMatrix(mat, covariance, pca.mean, CV_COVAR_NORMAL | CV_COVAR_COLS, CV_32F);
-  cout << "COVARIANCE:" << endl;
-  for (int i =0; i < 10; i++) {
-    cout << covariance.at<float>(i, 0) << "    ";
-  }
   cout << endl << "EIGEN: " << endl; 
 //  cout << a.rows << "   " << a.cols << endl << mean.rows << "   " << mean.cols << endl;;
   for (int i = 0; i < eigenvalues.rows; i++) {
@@ -70,8 +63,17 @@ int main(int argc, const char** argv)
   Mat stacked;
   hconcat(images, stacked);
   // cout << stacked.rows << "    " << stacked.cols;
-  pcaOpencv(stacked);
+  Mat testEigen = pcaOpencv(stacked);
   Mat eigenvectors = pca(stacked, true);
+  vector<Mat> eigenfaces;
+  for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
+    // reshape eigenvector to 100x100
+    Mat face = eigenvectors.row(i).reshape(1, 100) / 255.0;
+    eigenfaces.push_back(face);
+  }
+  cout << eigenfaces.at(0).rows << "   " << eigenfaces.at(0).cols << endl;
+  imshow("Window", eigenfaces.at(0));
+  waitKey(0);
   return 0;
 }
 
@@ -155,7 +157,7 @@ vector< vector<string> > laod_pretrained(const string& filename) {
 	line.erase(0, col + 1);
 
 
-	vector<vector<string>> output_matrix(row, vector<string>(col));
+	vector<vector<string> > output_matrix(row, vector<string>(col));
 
 
 	int i = 0;
