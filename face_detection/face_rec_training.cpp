@@ -39,7 +39,6 @@ Mat pcaOpencv(Mat mat) {
 }
 
 /** Function Headers */
-/*
 int main(int argc, const char** argv)
 {
   // Read images from a folder
@@ -79,8 +78,6 @@ int main(int argc, const char** argv)
   waitKey(0);
   return 0;
 }
-*/
-
 
 // For a NxM matrix, subtracts the columwise mean from all M columns
 Mat subtractMean(Mat mat, bool isColumnMean) {
@@ -197,10 +194,10 @@ vector< vector<string> > laod_pretrained(const string& filename) {
 }
 
 
-void laod_pretrained(vector< vector<string> > save_matrix, const string& filename) {
-
-	int rows = save_matrix.size();
-	int cols = save_matrix[0].size();
+void laod_pretrained(Mat save_matrix, const string& filename) {
+	
+	int rows = save_matrix.rows;
+	int cols = save_matrix.cols;
 
 	ofstream myfile;
 	myfile.open(filename);
@@ -209,21 +206,10 @@ void laod_pretrained(vector< vector<string> > save_matrix, const string& filenam
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
-			myfile << save_matrix[i][j] << ";";
+			myfile << save_matrix.at<double>(0, 0) << ";";
 		}
 		myfile << "\n";
 	}
 	myfile.close();
 
 }
-
-
-/*
-float euclidean_distance(vector<String> v1, vector<String>  v2) {
-	float dist = 0;
-	for (int i = 0; i < v1.size(); i++) {
-		dist += (v1[i] - v2[i])*(v1[i] - v2[i]);
-	}
-	return sqrt(dist);
-
-}*/
