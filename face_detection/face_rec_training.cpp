@@ -46,6 +46,7 @@ Mat pcaOpencv(Mat mat) {
 }
 
 /** Function Headers */
+/*
 int main(int argc, const char** argv)
 {
   // Read images from a folder
@@ -74,6 +75,8 @@ int main(int argc, const char** argv)
   Mat eigenvectors = pca(stacked, true);
   return 0;
 }
+*/
+
 
 // For a NxM matrix, subtracts the columwise mean from all M columns
 Mat subtractMean(Mat mat, bool isColumnMean) {
@@ -209,3 +212,14 @@ void laod_pretrained(vector< vector<string> > save_matrix, const string& filenam
 	myfile.close();
 
 }
+
+
+/*
+float euclidean_distance(vector<String> v1, vector<String>  v2) {
+	float dist = 0;
+	for (int i = 0; i < v1.size(); i++) {
+		dist += (v1[i] - v2[i])*(v1[i] - v2[i]);
+	}
+	return sqrt(dist);
+
+}*/
