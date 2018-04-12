@@ -113,7 +113,6 @@ int main(int argc, const char** argv)
 }
 
 
-
 // For a NxM matrix, subtracts the columwise mean from all M columns
 Mat subtractMean(Mat mat, bool isColumnMean) {
   Mat meanSubtracted;
@@ -196,18 +195,33 @@ X;X;X;X;X;X....
 
 Returns the read CSV in a 2d vector format in string.
 */
-vector< vector<string> > laod_pretrained(const string& filename) {
+void laod_pretrained(const string& filename, Mat *values, vector<string> * labels) {
+	
 	string line;
 	ifstream file(filename.c_str());
+	
 	string delimiter = ";";
 	string token, token_row;
+	
 
 	getline(file, line, ',');
-	int col = stoi(line.substr(0, line.find(delimiter)));
-	line.erase(0, col);
-	int row = stoi(line.substr(0, line.find(delimiter)));
-	line.erase(0, col + 1);
+	cout << line<< endl;
 
+	int col = stoi(line.substr(0, line.find(delimiter)));
+	line.erase(0, col +1);
+	cout << line << endl;
+	
+	int row = stoi(line.substr(0, line.find(delimiter)));
+	cout << "row, col" << row << ", " << col << endl;
+	line.erase(0, col + 1);
+	cout << line << endl;
+	
+
+	
+
+	Mat temp_values = cv::Mat(row, col -1, CV_32F);
+	//labels = new vector<string>(row);
+	
 
 	vector<vector<string> > output_matrix(row, vector<string>(col));
 
@@ -221,43 +235,53 @@ vector< vector<string> > laod_pretrained(const string& filename) {
 			token_row = line.substr(0, pos_row);
 			size_t pos = 0;
 			int j = 0;
-
+			pos = token_row.find(delimiter);
+			token = token_row.substr(0, pos);
+			token_row.erase(0, pos + delimiter.length());
+			labels->push_back(token);
 			while ((pos = token_row.find(delimiter)) != string::npos) {
 				token = token_row.substr(0, pos);
 				token_row.erase(0, pos + delimiter.length());
-				output_matrix[i][j] = token;
+				temp_values.at<float>(i, j) = strtof((token).c_str(), 0);
 				j++;
-
 			}
 			token = token_row.substr(0, pos);
 			token_row.erase(0, pos + delimiter.length());
-			output_matrix[i][j] = token;
-			cout << endl;
+			temp_values.at<float>(i,j) = strtof((token).c_str(), 0);
 			i++;
 		}
 		line.erase(0, pos_row + 1);
 
 	}
 
-
-	return output_matrix;
+	*values = temp_values;
+	
+	cout << "Loading done!" << endl;
 }
 
 
 
-void laod_pretrained(Mat save_matrix, const string& filename) {
+void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& filename) {
 
-	int rows = save_matrix.rows;
-	int cols = save_matrix.cols;
+	int rows = (*save_matrix).rows;
+	int cols = (*save_matrix).cols;
 	ofstream myfile;
 	myfile.open(filename);
-	myfile << cols << "\n";
+	myfile << (cols + 1) << "\n";
 	myfile << rows << "\n";
 
+	
 	for (int i = 0; i < rows; i++) {
+		cout << (*labels)[i] << ";";
+		myfile << (*labels)[i] << ";";
 		for (int j = 0; j < cols; j++) {
-			myfile << save_matrix.at<double>(0, 0) << ";";
+			cout << (*save_matrix).at<float>(i, j) << ";";
+			myfile << (*save_matrix).at<float>(i, j);
+			if (j < cols - 1) {
+				myfile << ";";
+			}
 		}
+		cout << endl;
 		myfile << "\n";
 	}
 	myfile.close();
@@ -272,4 +296,31 @@ float euclidean_distance(vector<String> v1, vector<String>  v2) {
        }
        return sqrt(dist);
 
-}*/
+}
+
+int main() {
+	Mat m;
+	vector<string> names;
+	
+	laod_pretrained("test_csv.csv", &m, &names);
+
+
+	cout << "Trying data, namesize, m.cols" << names.size() << "   " << m.cols << endl;
+	for (int i = 0; i < names.size(); i++) {
+		cout << names[i] << "  : ";
+		for (int j = 0; j < m.cols; j++) {
+			m.at<float>(i, j) = m.at<float>(i, j) + 1;
+			cout << m.at<float>(i,j) << ", ";
+		}
+		cout << " " << endl;
+	}
+	
+	char x;
+	cin >> x;
+	
+	save_pretrained(&m, &names,  "test_csv.csv");
+	cin >> x;
+	return 0;
+
+}
+*/
