@@ -54,8 +54,10 @@ int main(int argc, const char** argv)
        if (raw_im.empty()) continue; //only proceed if sucsessful
        Mat im;
        raw_im.convertTo(im, CV_32F);
+       Mat resized;
+       resize(im, resized, Size(100,100), 0, 0);
        // Flatten image to column vector
-       Mat flattened = im.reshape(1,1).t();
+       Mat flattened = resized.reshape(1,1).t();
        images.push_back(flattened);
   }
   
