@@ -14,28 +14,33 @@ using namespace cv;
 
 #define EIGEN_FACE_COUNT 200
 
+//Headers
 Mat subtractMean(Mat mat, bool isColumnFeatures = true);
 Mat covMatrix(Mat mat, bool isMeanSubtracted = true);
 Mat pca(Mat mat, bool isColumnFeatures = true);
 int train_pca(const string& filename);
 void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& filename);
 void laod_pretrained(const string& filename, Mat *values, vector<string> * labels);
+int euclidean_distance(Mat eigen_faces, Mat  input_face);
+
 
 const string searchPattern = "train_images/*.jpg";
+Mat saved_eigen_faces;
+vector<string> labels;
 
 int main(int argc, const char** argv) {
 	
-	train_pca("eigen_faces.csv");
+	//train_pca("eigen_faces.csv");
+	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
 
 
-	Mat load;
-	vector<string> load_names;
-	laod_pretrained("eigen_faces.csv", &load, &load_names);
+	int test_index = 0;
+	Mat test_face = saved_eigen_faces.row(test_index);
+	cout << "Testing face : " << labels[test_index] << endl;
 
-	for (int i = 0; i < load_names.size(); i++) {
-		cout << load_names[i] << ", " << load.at<float>(i, 0) << ", " << load.at<float>(i, 1) << ", " << load.at<float>(i, 2) << endl;
-	}
 
+	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
+	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
 	cin >> x;
 
@@ -277,10 +282,12 @@ void laod_pretrained(const string& filename, Mat *values, vector<string> * label
 
 	getline(file, line, ',');
 	int col = stoi(line.substr(0, line.find(delimiter)));
-	line.erase(0, col +1);
+	string test = line.substr(0, line.find("\n"));
+	line.erase(0, line.find("\n") + 1);
 	int row = stoi(line.substr(0, line.find(delimiter)));
-	line.erase(0, col + 1);
-
+	test = line.substr(0, line.find("\n") + 1);
+	line.erase(0, line.find("\n") + 1);
+	
 
 	Mat temp_values = cv::Mat(row, col -1, CV_32F);
 	
@@ -341,6 +348,7 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 	for (int i = 0; i < rows; i++) {
 		//cout << (*labels)[i] << ";";
 		myfile << (*labels)[i] << ";";
+		cout << (*labels)[i] << endl;
 		for (int j = 0; j < cols; j++) {
 			//cout << (*save_matrix).at<float>(i, j) << ";";
 			myfile << (*save_matrix).at<float>(i, j);
@@ -356,38 +364,34 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 }
 
 /*
-float euclidean_distance(vector<String> v1, vector<String>  v2) {
-       float dist = 0;
-       for (int i = 0; i < v1.size(); i++) {
-               dist += (v1[i] - v2[i])*(v1[i] - v2[i]);
-       }
-       return sqrt(dist);
-
-}
-
-int main() {
-	Mat m;
-	vector<string> names;
+@eigen_faces: The saved faces that are pre-trained
+@input_face: A 100x100 1D Mat that is the face you want to figure out
+returns: the index of the predicted face. 
+*/
+int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 	
-	laod_pretrained("test_csv.csv", &m, &names);
-
-
-	cout << "Trying data, namesize, m.cols" << names.size() << "   " << m.cols << endl;
-	for (int i = 0; i < names.size(); i++) {
-		cout << names[i] << "  : ";
-		for (int j = 0; j < m.cols; j++) {
-			m.at<float>(i, j) = m.at<float>(i, j) + 1;
-			cout << m.at<float>(i,j) << ", ";
-		}
-		cout << " " << endl;
+	if (input_face.cols != 1 && input_face.rows != 1) {
+		input_face = input_face.reshape(1, 1).t();
 	}
 	
-	char x;
-	cin >> x;
+	//Getting first distance
+	Mat temp;
+	pow((eigen_faces.row(0) - input_face), 2, temp);
+	cv::Scalar temp_dist = cv::sum(temp);
+	float dist = float(temp_dist[0]);
+	int index = 0;
 	
-	save_pretrained(&m, &names,  "test_csv.csv");
-	cin >> x;
-	return 0;
+    for (int i = 1; i < eigen_faces.rows; i++) {
+		Mat temp;
+		pow((eigen_faces.row(i) - input_face), 2, temp);
+		cv::Scalar temp_dist = cv::sum(temp);
+		if (float(temp_dist[0]) < dist) {
+			dist = float(temp_dist[0]);
+			index = i;
+		}
+		   
+    }
+    
+	return index;
 
 }
-*/
