@@ -22,6 +22,7 @@ int train_pca(const string& filename);
 void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& filename);
 void laod_pretrained(const string& filename, Mat *values, vector<string> * labels);
 int euclidean_distance(Mat eigen_faces, Mat  input_face);
+Mat get_eigen_face(Mat input_face);
 
 
 const string searchPattern = "train_images/*.jpg";
@@ -38,11 +39,28 @@ int main(int argc, const char** argv) {
 	Mat test_face = saved_eigen_faces.row(test_index);
 	cout << "Testing face : " << labels[test_index] << endl;
 
+	Mat input_face = imread("train_images/aragorn_happy.jpg");
+	get_eigen_face(input_face);
+
 
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
 	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
 	cin >> x;
+
+}
+
+
+//TODO
+Mat get_eigen_face(Mat input_face) {
+	if (input_face.cols != 1 && input_face.rows != 1) {
+		input_face = input_face.reshape(1, 1).t();
+	}
+	Mat meanSubtracted;
+	meanSubtracted = subtractMean(input_face, true);
+	
+
+	return meanSubtracted;
 
 }
 
@@ -365,7 +383,7 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 
 /*
 @eigen_faces: The saved faces that are pre-trained
-@input_face: A 100x100 1D Mat that is the face you want to figure out
+@input_face: A 1D Mat that is the face you want to figure out
 returns: the index of the predicted face. 
 */
 int euclidean_distance(Mat eigen_faces, Mat  input_face) {
