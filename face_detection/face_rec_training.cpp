@@ -12,7 +12,7 @@
 using namespace std;
 using namespace cv;
 
-#define EIGEN_FACE_COUNT 200
+#define EIGEN_FACE_COUNT 200 
 
 //Headers
 Mat subtractMean(Mat mat, bool isColumnFeatures = true);
@@ -22,27 +22,30 @@ int train_pca(const string& filename);
 void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& filename);
 void laod_pretrained(const string& filename, Mat *values, vector<string> * labels);
 int euclidean_distance(Mat eigen_faces, Mat  input_face);
-Mat get_eigen_face(Mat input_face);
-
+Mat get_eigen_face(Mat input_face, Mat eigenspace, Mat mean);
+void save_eigenspace(vector<Mat> eigenfaces, const string& filename);
+void load_matrix_from_csv(const string& filename, Mat *eigenspace);
+void save_mean(Mat mean, const string& filename);
 
 const string searchPattern = "train_images/*.jpg";
 Mat saved_eigen_faces;
 vector<string> labels;
 
 int main(int argc, const char** argv) {
-	
-	//train_pca("eigen_faces.csv");
+  Mat eigenspace;	
+  Mat mean;
+	train_pca("eigen_faces.csv");
+  load_matrix_from_csv("eigenspace.csv", &eigenspace);
+  load_matrix_from_csv("mean.csv", &mean);
 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+   
+  Mat input_face = imread("train_images/obama_happy.jpg");
+  Mat input_face_float; 
+  input_face.convertTo(input_face_float, CV_32F);
+  Mat resized;
 
-
-	int test_index = 0;
-	Mat test_face = saved_eigen_faces.row(test_index);
-	cout << "Testing face : " << labels[test_index] << endl;
-
-	Mat input_face = imread("train_images/aragorn_happy.jpg");
-	get_eigen_face(input_face);
-
-
+  resize(input_face_float, resized, Size(100,100), 0, 0);
+	Mat test_face = get_eigen_face(resized, eigenspace, mean);
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
 	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
@@ -51,17 +54,15 @@ int main(int argc, const char** argv) {
 }
 
 
-//TODO
-Mat get_eigen_face(Mat input_face) {
+//TODO: verify this
+Mat get_eigen_face(Mat input_face, Mat eigenspace, Mat mean) {
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1).t();
 	}
-	Mat meanSubtracted;
-	meanSubtracted = subtractMean(input_face, true);
-	
-
-	return meanSubtracted;
-
+  Mat meanSubtracted = input_face - mean; 
+  cout << eigenspace.rows << "   " << eigenspace.cols << endl; 
+  cout << meanSubtracted.rows << "   " << meanSubtracted.cols << endl; 
+  return eigenspace * meanSubtracted;
 }
 
 Mat pcaOpencv(Mat mat) {
@@ -169,6 +170,7 @@ int train_pca(const string& filename)
   // Concatenate row vector (Will have 10000 * K matrix)
   Mat stacked;
   hconcat(images, stacked);
+  cout << stacked.rows<< " ASDF " << stacked.cols;
   // cout << stacked.rows << "    " << stacked.cols;
   // Mat testEigen = pcaOpencv(stacked);
   // Get the transformed dataset
@@ -210,6 +212,7 @@ Mat subtractMean(Mat mat, bool isColumnMean) {
     // Tile the means for subtraction
     repeated = repeat(columnMean, 1, mat.cols);
     subtract(mat, repeated, meanSubtracted); 
+    save_mean(columnMean, "mean.csv");
   } else {
     Mat rowMean;
     Mat repeated;
@@ -258,19 +261,69 @@ Mat pca(Mat mat, bool isColumnFeatures) {
   cout << "Let's take the " << EIGEN_FACE_COUNT << " largest eigen-face values " << endl;
   vector<Mat> eigenfaces;
   for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
-    // reshape eigenvector to 100x100
     Mat face = eigenvecs.row(i).t();
     eigenfaces.push_back(face);
   }
+  save_eigenspace(eigenfaces, "eigenspace.csv");
   // Concatenates the eigenfaces 
   Mat principleEigenfaces;
   hconcat(eigenfaces, principleEigenfaces);
+  
   // Rduce dataset to the EIGEN_FACE_COUNT dimensions
   Mat datasetReduced = principleEigenfaces.t() * meanSubtracted; 
   return datasetReduced;
 }
 
 
+void load_matrix_from_csv(const string& filename, Mat *space) {
+	string line;
+	ifstream file(filename.c_str());
+	
+	string delimiter = ";";
+	string token, token_row;
+	
+
+	getline(file, line, ',');
+	int col = stoi(line.substr(0, line.find(delimiter)));
+	string test = line.substr(0, line.find("\n"));
+	line.erase(0, line.find("\n") + 1);
+	int row = stoi(line.substr(0, line.find(delimiter)));
+	test = line.substr(0, line.find("\n") + 1);
+	line.erase(0, line.find("\n") + 1);
+	
+
+	Mat temp_values = cv::Mat(row, col -1, CV_32F);
+
+	int i = 0;
+	size_t pos_row = 0;
+
+	while ((pos_row = line.find('\n')) != string::npos) {
+
+		if (pos_row != 0) {
+			token_row = line.substr(0, pos_row);
+			size_t pos = 0;
+			int j = 0;
+			pos = token_row.find(delimiter);
+			while ((pos = token_row.find(delimiter)) != string::npos) {
+				token = token_row.substr(0, pos);
+				token_row.erase(0, pos + delimiter.length());
+				temp_values.at<float>(i, j) = strtof((token).c_str(), 0);
+				j++;
+			}
+			token = token_row.substr(0, pos);
+			token_row.erase(0, pos + delimiter.length());
+			temp_values.at<float>(i,j) = strtof((token).c_str(), 0);
+			i++;
+		}
+		line.erase(0, pos_row + 1);
+
+	}
+
+	*space = temp_values;
+	
+	cout << "Loading eigenspace done!" << endl;
+
+}
 /**
 @filname is the relative path to the file
 @*values is a pointer to the matrix with eigen-faces (&values)
@@ -346,7 +399,42 @@ void laod_pretrained(const string& filename, Mat *values, vector<string> * label
 	cout << "Loading done!" << endl;
 }
 
-
+void save_mean(Mat mean, const string& filename) {
+  ofstream myfile;
+  myfile.open(filename);
+	int rows = mean.rows;
+	int cols = mean.cols;
+	myfile << (cols + 1) << "\n";
+	myfile << rows << "\n";
+  for (int i = 0; i < mean.rows; i++) {
+    for (int j =0; j < mean.cols; j++) {
+      myfile << mean.at<float>(i, j); 
+			if (j < mean.cols- 1) {
+				myfile << ";";
+			}
+    }
+		myfile << "\n";
+  } 
+  myfile.close();
+}
+void save_eigenspace(vector<Mat> eigenfaces, const string& filename) {
+  ofstream myfile;
+  myfile.open(filename);
+	int rows = eigenfaces.size();
+	int cols = eigenfaces[0].rows;
+	myfile << (cols + 1) << "\n";
+	myfile << rows << "\n";
+  for (int i = 0; i < eigenfaces.size(); i++) {
+    for (int j =0; j < eigenfaces[i].rows; j++) {
+      myfile << eigenfaces[i].at<float>(j, 0); 
+			if (j < eigenfaces[i].rows- 1) {
+				myfile << ";";
+			}
+    }
+		myfile << "\n";
+  } 
+  myfile.close();
+}
 /*
 @filname is the relative path to the file
 @*save_matrix is a pointer to the matrix with eigen-faces (&values)
@@ -387,7 +475,6 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 returns: the index of the predicted face. 
 */
 int euclidean_distance(Mat eigen_faces, Mat  input_face) {
-	
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1).t();
 	}
