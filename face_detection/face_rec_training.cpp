@@ -29,11 +29,10 @@ void save_mean(Mat mean, const string& filename);
 
 const string searchPattern = "train_images/*.jpg";
 Mat saved_eigen_faces;
+Mat eigenspace;	
 vector<string> labels;
 
 int main(int argc, const char** argv) {
-  Mat eigenspace;	
-  Mat mean;
 	train_pca("eigen_faces.csv");
   load_matrix_from_csv("eigenspace.csv", &eigenspace);
 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
@@ -44,7 +43,7 @@ int main(int argc, const char** argv) {
   input_face.convertTo(input_face_float, CV_32F);
   Mat resized;
   resize(input_face_float, resized, Size(25,25), 0, 0);
-	Mat test_face = get_eigen_face(resized, eigenspace).t();
+	Mat test_face = get_eigen_face(resized, eigenspace);
   cout << "eigenface computed" << endl;
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
 	cout << "Predicted face : " << labels[test_distace] << endl;
@@ -74,7 +73,6 @@ Mat pcaOpencv(Mat mat) {
   Mat a = eigenvectors.reshape(1, 100);
   cout << a.at<float>(0,0);
   Mat mean = pca.mean.col(0).reshape(1, 1);
-  save_mean(mean, "mean_opencv.csv");
   Mat covariance;
   cout << endl << "EIGEN: " << endl; 
   for (int i = 0; i < 5; i++) {
@@ -277,7 +275,7 @@ Mat pca(Mat mat, bool isColumnFeatures) {
   hconcat(eigenfaces, principleEigenfaces);
   
   // Rduce dataset to the EIGEN_FACE_COUNT dimensions
-  Mat datasetReduced = principleEigenfaces.t() * meanSubtracted; 
+  Mat datasetReduced = meanSubtracted.t() * principleEigenfaces; 
   return datasetReduced;
 }
 
