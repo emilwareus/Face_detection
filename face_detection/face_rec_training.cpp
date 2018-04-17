@@ -44,8 +44,9 @@ int main(int argc, const char** argv) {
   Mat resized;
 
   resize(input_face_float, resized, Size(25,25), 0, 0);
-	Mat test_face = get_eigen_face(resized, eigenspace).t();
-  cout << "eigenface computed" << endl;
+	Mat test_face = get_eigen_face(resized, eigenspace);
+	cout << "eigenface computed " << test_face.rows << "  " << test_face.cols << endl;
+	cout << "dataset dimensions " << saved_eigen_faces.rows << "  " << saved_eigen_faces.cols << endl;
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
 	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
@@ -482,16 +483,16 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1).t();
 	}
-	
+
 	//Getting first distance
-	Mat temp;
-	pow((eigen_faces.row(0) - input_face), 2, temp);
+	Mat temp;	 
+	pow((eigen_faces.col(0) - input_face), 2, temp);
 	cv::Scalar temp_dist = cv::sum(temp);
 	float dist = float(temp_dist[0]);
 	int index = 0;
-    for (int i = 1; i < eigen_faces.rows; i++) {
+    for (int i = 1; i < eigen_faces.cols; i++) {
 		Mat temp;
-		pow((eigen_faces.row(i) - input_face), 2, temp);
+		pow((eigen_faces.col(i) - input_face), 2, temp);
 		cv::Scalar temp_dist = cv::sum(temp);
 		if (float(temp_dist[0]) < dist) {
 			dist = float(temp_dist[0]);
