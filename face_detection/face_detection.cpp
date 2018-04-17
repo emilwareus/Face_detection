@@ -22,6 +22,7 @@ string window_name = "Capture - Face detection";
 RNG rng(12345);
 
 /** @function main */
+/*
 int main(int argc, const char** argv)
 {
 	int camera = 1;
@@ -80,7 +81,7 @@ int main(int argc, const char** argv)
 		}
 	}
 }
-
+*/
 void saveImageCallback(int event, int x, int y, int flags, void* userdata) 
 {
     if  ( event == EVENT_LBUTTONDOWN)

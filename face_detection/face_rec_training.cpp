@@ -42,7 +42,7 @@ int main(int argc, const char** argv) {
   Mat input_face_float;
   input_face.convertTo(input_face_float, CV_32F);
   Mat resized;
-  resize(input_face_float, resized, Size(25,25), 0, 0);
+  resize(input_face_float, resized, Size(100,100), 0, 0);
 	Mat test_face = get_eigen_face(resized, eigenspace);
   cout << "eigenface computed" << endl;
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
@@ -165,7 +165,7 @@ int train_pca(const string& filename)
        Mat im;
        raw_im.convertTo(im, CV_32F);
        Mat resized;
-       resize(im, resized, Size(25,25), 0, 0);
+       resize(im, resized, Size(100,100), 0, 0);
        // Flatten image to column vector
        Mat flattened = resized.reshape(1,1).t();
        images.push_back(flattened);
