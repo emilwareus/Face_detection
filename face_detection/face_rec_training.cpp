@@ -33,17 +33,19 @@ Mat eigenspace;
 Mat mean_face;
 vector<string> labels;
 
+
 int main(int argc, const char** argv) {
 	// train_pca("eigen_faces.csv");
+	 
   load_matrix_from_csv("eigenspace.csv", &eigenspace);
 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
 	load_matrix_from_csv("mean.csv", &mean_face);
-  Mat input_face = imread("train_images/joe_5.jpg", 0);
+  Mat input_face = imread("train_images/gimli_neutral.jpg", 0);
   Mat input_face_float; 
   input_face.convertTo(input_face_float, CV_32F);
   Mat resized;
 
-  resize(input_face_float, resized, Size(25,25), 0, 0);
+  resize(input_face_float, resized, Size(100,100), 0, 0);
 	Mat test_face = get_eigen_face(resized, eigenspace);
 	cout << "eigenface computed " << test_face.rows << "  " << test_face.cols << endl;
 	cout << "dataset dimensions " << saved_eigen_faces.rows << "  " << saved_eigen_faces.cols << endl;
@@ -51,7 +53,39 @@ int main(int argc, const char** argv) {
 	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
 	cin >> x;
+	
 
+}
+
+
+void init() {
+	while (true) {
+		cout << "Press 1 to train and 2 to lauch recognition on camera? y/n: ";
+		int x;
+		cin >> x;
+		cout << endl;
+		if (x == 1) {
+			train_pca("eigen_faces.csv");
+			break;
+		}
+		else if (x == 2) {
+			cout << "Let's use the exesting database" << endl;
+			load_matrix_from_csv("eigenspace.csv", &eigenspace);
+			laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+			load_matrix_from_csv("mean.csv", &mean_face);
+			break;
+		}
+	}
+}
+
+string detect_face(Mat face) {
+	Mat input_face_float;
+	face.convertTo(input_face_float, CV_32F);
+	Mat resized;
+	resize(input_face_float, resized, Size(100, 100), 0, 0);
+	Mat test_face = get_eigen_face(resized, eigenspace);
+	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
+	return labels[test_distance];
 }
 
 
@@ -165,7 +199,7 @@ int train_pca(const string& filename)
        Mat im;
        raw_im.convertTo(im, CV_32F);
        Mat resized;
-       resize(im, resized, Size(25,25), 0, 0);
+       resize(im, resized, Size(100,100), 0, 0);
        // Flatten image to column vector
        Mat flattened = resized.reshape(1,1).t();
        images.push_back(flattened);
