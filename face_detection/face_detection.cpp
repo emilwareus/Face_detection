@@ -54,7 +54,6 @@ int main(void)
 			// the detected face is 100x100
 			// you may add your NCC code here
 			result_recognition = detect_face(face);
-
 		}
 		else
 		{
@@ -129,7 +128,13 @@ cv::Mat detectAndDisplay(Mat frame)
 		}
 		std::cout << "Face location:" << "(" << roi_c.x << ", " << roi_c.y << ")" << std::endl;
 		crop = frame(roi_b);
+    try {
 		resize(crop, res, Size(100, 100), 0, 0, INTER_LINEAR); // This will be needed later while saving images
+  } catch( cv::Exception& e ) {
+    const char* err_msg = e.what();
+      std::cout << "exception caught: " << err_msg << std::endl;
+      return frame_gray;
+  }
 		cvtColor(res, gray, CV_BGR2GRAY); // Convert cropped image to Grayscale
 
 		/*

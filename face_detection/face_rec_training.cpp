@@ -88,7 +88,13 @@ String detect_face(Mat face) {
 	Mat input_face_float;
 	face.convertTo(input_face_float, CV_32F);
 	Mat resized;
+  try {
 	resize(input_face_float, resized, Size(100, 100), 0, 0);
+} catch( cv::Exception& e ) {
+  const char* err_msg = e.what();
+    std::cout << "exception caught 2: " << err_msg << std::endl;
+    return "";
+}
 	Mat test_face = get_eigen_face(resized, eigenspace);
 	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
 	return labels[test_distance];
