@@ -12,17 +12,17 @@
 using namespace std;
 using namespace cv;
 
-#define EIGEN_FACE_COUNT 200 
+#define EIGEN_FACE_COUNT 200
 
 //Headers
-Mat subtractMean(Mat mat, bool isColumnFeatures = true);
+Mat subtractMean(Mat mat, bool isColumnFeatures = false);
 Mat covMatrix(Mat mat, bool isMeanSubtracted = true);
 Mat pca(Mat mat, bool isColumnFeatures = true);
 int train_pca(const string& filename);
 void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& filename);
 void laod_pretrained(const string& filename, Mat *values, vector<string> * labels);
 int euclidean_distance(Mat eigen_faces, Mat  input_face);
-Mat get_eigen_face(Mat input_face, Mat eigenspace, Mat mean);
+Mat get_eigen_face(Mat input_face, Mat eigenspace);
 void save_eigenspace(vector<Mat> eigenfaces, const string& filename);
 void load_matrix_from_csv(const string& filename, Mat *eigenspace);
 void save_mean(Mat mean, const string& filename);
@@ -36,16 +36,16 @@ int main(int argc, const char** argv) {
   Mat mean;
 	train_pca("eigen_faces.csv");
   load_matrix_from_csv("eigenspace.csv", &eigenspace);
-  load_matrix_from_csv("mean.csv", &mean);
 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
-   
-  Mat input_face = imread("train_images/obama_happy.jpg");
-  Mat input_face_float; 
+  
+  cout <<"Eigenspace dimensions" << "\n" << eigenspace.rows << "\t" << eigenspace.cols << endl;
+  Mat input_face = imread("train_images/joe_5.jpg", 0);
+  Mat input_face_float;
   input_face.convertTo(input_face_float, CV_32F);
   Mat resized;
-
-  resize(input_face_float, resized, Size(100,100), 0, 0);
-	Mat test_face = get_eigen_face(resized, eigenspace, mean);
+  resize(input_face_float, resized, Size(25,25), 0, 0);
+	Mat test_face = get_eigen_face(resized, eigenspace).t();
+  cout << "eigenface computed" << endl;
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
 	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
@@ -55,29 +55,33 @@ int main(int argc, const char** argv) {
 
 
 //TODO: verify this
-Mat get_eigen_face(Mat input_face, Mat eigenspace, Mat mean) {
+Mat get_eigen_face(Mat input_face, Mat eigenspace) {
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1).t();
 	}
-  Mat meanSubtracted = input_face - mean; 
-  cout << eigenspace.rows << "   " << eigenspace.cols << endl; 
-  cout << meanSubtracted.rows << "   " << meanSubtracted.cols << endl; 
+  // Mat meanSubtracted = input_face.t() - mean; 
+  Mat meanSubtracted = subtractMean(input_face, false);
+  cout << "Input_face_dimensions" << "\n" << meanSubtracted.rows << "   " << meanSubtracted.cols << endl; 
   return eigenspace * meanSubtracted;
 }
 
 Mat pcaOpencv(Mat mat) {
-  PCA pca(mat, Mat(), PCA::DATA_AS_COL, 200);
+  cout << "PCA MAT DIMS: "<< "\n" << mat.rows << "\t" << mat.cols << endl;
+  PCA pca(mat, Mat(), PCA::DATA_AS_COL, EIGEN_FACE_COUNT);
   Mat eigenvalues = pca.eigenvalues.clone();
   Mat eigenvectors = pca.eigenvectors.clone();
+  cout << eigenvectors.rows << "   " << eigenvectors.cols << endl;
   Mat a = eigenvectors.reshape(1, 100);
   cout << a.at<float>(0,0);
-  Mat mean = pca.mean.col(0).reshape(1, 100);
+  Mat mean = pca.mean.col(0).reshape(1, 1);
+  save_mean(mean, "mean_opencv.csv");
   Mat covariance;
   cout << endl << "EIGEN: " << endl; 
   for (int i = 0; i < 5; i++) {
     cout << eigenvalues.at<float>(i, 0) << endl;
   }
-  Mat meanSubtracted = subtractMean(mat, true);
+  cout << "mat channels: " << mat.channels();
+  Mat meanSubtracted = subtractMean(mat.clone(), false);
   
   vector<Mat> eigenfaces;
   for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
@@ -85,11 +89,14 @@ Mat pcaOpencv(Mat mat) {
     Mat face = eigenvectors.row(i).t();
     eigenfaces.push_back(face);
   }
+  save_eigenspace(eigenfaces, "eigenspace_opencv.csv");
+  // Concatenates the eigenfaces 
   Mat principleEigenfaces;
   hconcat(eigenfaces, principleEigenfaces);
+
   cout << meanSubtracted.rows << "  " << meanSubtracted.cols << endl;
   cout << principleEigenfaces.rows << "  " << principleEigenfaces.cols << endl;
-  Mat datasetReduced = principleEigenfaces.t() * meanSubtracted; 
+  Mat datasetReduced = meanSubtracted.t() * principleEigenfaces; 
   return datasetReduced;
 }
 
@@ -132,7 +139,6 @@ int train_pca(const string& filename)
   {
       // Read the raw image, convert the matrix to float so we can perform PCA
        Mat raw_im = imread(fn[k], 0);
-      
       // Dealing with getting the label from filename 
        if (raw_im.empty()) continue; //only proceed if sucsessful
 	   string name;
@@ -161,7 +167,7 @@ int train_pca(const string& filename)
        Mat im;
        raw_im.convertTo(im, CV_32F);
        Mat resized;
-       resize(im, resized, Size(100,100), 0, 0);
+       resize(im, resized, Size(25,25), 0, 0);
        // Flatten image to column vector
        Mat flattened = resized.reshape(1,1).t();
        images.push_back(flattened);
@@ -170,11 +176,11 @@ int train_pca(const string& filename)
   // Concatenate row vector (Will have 10000 * K matrix)
   Mat stacked;
   hconcat(images, stacked);
-  cout << stacked.rows<< " ASDF " << stacked.cols;
   // cout << stacked.rows << "    " << stacked.cols;
   // Mat testEigen = pcaOpencv(stacked);
   // Get the transformed dataset
-  Mat transformedDataset = (pca(stacked, true)).t();
+  // Mat transformedDataset = (pcaOpencv(stacked));
+  Mat transformedDataset = (pca(stacked)).t();
 
   // transformedDataset will be NUM_EIGEN_FACES x Training Examples matrix
 
@@ -221,6 +227,7 @@ Mat subtractMean(Mat mat, bool isColumnMean) {
     // Tile the means for subtraction
     repeated  = repeat(rowMean, mat.rows, 1);
     subtract(mat, repeated, meanSubtracted); 
+    cout << "SUM: " << "\n" << sum(meanSubtracted.col(0)) << endl;
   }
   return meanSubtracted;
 }
@@ -485,13 +492,13 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 	cv::Scalar temp_dist = cv::sum(temp);
 	float dist = float(temp_dist[0]);
 	int index = 0;
-	
     for (int i = 1; i < eigen_faces.rows; i++) {
 		Mat temp;
 		pow((eigen_faces.row(i) - input_face), 2, temp);
 		cv::Scalar temp_dist = cv::sum(temp);
 		if (float(temp_dist[0]) < dist) {
 			dist = float(temp_dist[0]);
+      cout << labels[i];
 			index = i;
 		}
 		   
