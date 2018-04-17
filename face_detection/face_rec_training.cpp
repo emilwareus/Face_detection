@@ -1,6 +1,7 @@
 #include "opencv2/objdetect/objdetect.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "face_rec_training.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -35,32 +36,32 @@ Mat mean_face;
 vector<string> labels;
 
 
-int main(int argc, const char** argv) {
-  // Uncomment this if you need to train
-	// train_pca("eigen_faces.csv");
-
-  // Loads the mean, eigenspace, precomputed eigenfaces
-  load_matrix_from_csv("eigenspace.csv", &eigenspace);
-	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
-	load_matrix_from_csv("mean.csv", &mean_face);
-
-  // Use a dummy example: Convert to float and resize
-  Mat input_face = imread("Barack Obama_0.jpg", 0);
-  Mat input_face_float;
-  input_face.convertTo(input_face_float, CV_32F);
-  Mat resized;
-  resize(input_face_float, resized, Size(100,100), 0, 0);
-
-  // Project the face onto eigenspace
-  Mat test_face = get_eigen_face(resized, eigenspace);
-
-  // Show prediction
-	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
-	cout << "Predicted face : " << labels[test_distace] << endl;
-	char x;
-	cin >> x;
-
-}
+// int main(int argc, const char** argv) {
+//   // Uncomment this if you need to train
+// 	// train_pca("eigen_faces.csv");
+//
+//   // Loads the mean, eigenspace, precomputed eigenfaces
+//   load_matrix_from_csv("eigenspace.csv", &eigenspace);
+// 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+// 	load_matrix_from_csv("mean.csv", &mean_face);
+//
+//   // Use a dummy example: Convert to float and resize
+//   Mat input_face = imread("Barack Obama_0.jpg", 0);
+//   Mat input_face_float;
+//   input_face.convertTo(input_face_float, CV_32F);
+//   Mat resized;
+//   resize(input_face_float, resized, Size(100,100), 0, 0);
+//
+//   // Project the face onto eigenspace
+//   Mat test_face = get_eigen_face(resized, eigenspace);
+//
+//   // Show prediction
+// 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
+// 	cout << "Predicted face : " << labels[test_distace] << endl;
+// 	char x;
+// 	cin >> x;
+//
+// }
 
 
 void init() {
@@ -83,7 +84,7 @@ void init() {
 	}
 }
 
-string detect_face(Mat face) {
+String detect_face(Mat face) {
 	Mat input_face_float;
 	face.convertTo(input_face_float, CV_32F);
 	Mat resized;

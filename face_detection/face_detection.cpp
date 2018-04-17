@@ -1,6 +1,7 @@
 #include "opencv2/objdetect/objdetect.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "face_rec_training.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -20,10 +21,11 @@ int filenumber; // Number of file to be saved
 string filename;
 
 string result_recognition;
-/*
+
 // Function main
 int main(void)
 {
+  init();
 	VideoCapture capture(0);
 
 	if (!capture.isOpened())  // check if we succeeded
@@ -71,7 +73,7 @@ int main(void)
 	return 0;
 
 }
-*/
+
 
 // Function detectAndDisplay
 cv::Mat detectAndDisplay(Mat frame)
