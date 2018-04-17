@@ -36,15 +36,15 @@ int main(int argc, const char** argv) {
 	train_pca("eigen_faces.csv");
   load_matrix_from_csv("eigenspace.csv", &eigenspace);
 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
-  
-  cout <<"Eigenspace dimensions" << "\n" << eigenspace.rows << "\t" << eigenspace.cols << endl;
+   
   Mat input_face = imread("train_images/joe_5.jpg", 0);
-  Mat input_face_float;
+  Mat input_face_float; 
   input_face.convertTo(input_face_float, CV_32F);
   Mat resized;
+
   resize(input_face_float, resized, Size(25,25), 0, 0);
-	Mat test_face = get_eigen_face(resized, eigenspace);
-  cout << "eigenface computed" << endl;
+	Mat test_face = get_eigen_face(resized, eigenspace, mean).t();
+  cout << "Test face computed" << endl;
 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
 	cout << "Predicted face : " << labels[test_distace] << endl;
 	char x;
@@ -58,9 +58,7 @@ Mat get_eigen_face(Mat input_face, Mat eigenspace) {
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1).t();
 	}
-  // Mat meanSubtracted = input_face.t() - mean; 
-  Mat meanSubtracted = subtractMean(input_face, false);
-  cout << "Input_face_dimensions" << "\n" << meanSubtracted.rows << "   " << meanSubtracted.cols << endl; 
+  Mat meanSubtracted = input_face - mean; 
   return eigenspace * meanSubtracted;
 }
 
