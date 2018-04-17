@@ -152,6 +152,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="face_detection.cpp" />
+    <ClCompile Include="face_rec_training.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="face_rec_training.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
