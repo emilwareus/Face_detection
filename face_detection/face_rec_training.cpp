@@ -28,6 +28,7 @@ Mat get_eigen_face(Mat input_face, Mat eigenspace);
 void save_eigenspace(vector<Mat> eigenfaces, const string& filename);
 void load_matrix_from_csv(const string& filename, Mat *eigenspace);
 void save_mean(Mat mean, const string& filename);
+vector<string> split(const string &s, char delim);
 
 const string searchPattern = "train_images/*.jpg";
 Mat saved_eigen_faces;
@@ -66,7 +67,7 @@ vector<string> labels;
 
 void init() {
 	while (true) {
-		cout << "Press 1 to train and 2 to lauch recognition on camera? y/n: ";
+		cout << "Press 1 to train and 2 to lauch recognition on camera? ";
 		int x;
 		cin >> x;
 		cout << endl;
@@ -77,7 +78,8 @@ void init() {
 		else if (x == 2) {
 			cout << "Let's use the exesting database" << endl;
 			load_matrix_from_csv("eigenspace.csv", &eigenspace);
-			laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+			//laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
 			load_matrix_from_csv("mean.csv", &mean_face);
 			break;
 		}
@@ -168,6 +170,29 @@ int train_pca(const string& filename)
   // transformedDataset will be NUM_EIGEN_FACES x Training Examples matrix
   cout << "Training Done! " << endl;
 
+  cout << "Computation of centroid for each individual ... " << endl;
+  /*Compute the center of each class*/
+  Mat centroid_transformedDataset(Size(20,200),CV_32F);
+  vector<string> centroidNames;
+  Mat transformedDataset_Transpose = transformedDataset.t();
+  for (int k = 0; k < 20; k++) {
+	  vector<string> tokens;
+	  tokens = split(names[k * 5], '_');
+	  string name = tokens[0];
+	  centroidNames.push_back(name);
+	  // Extract the name 
+	  for (int j = 0; j < 200; j++) {
+		  float sum = 0;
+		  for (int i = 0; i < 5; i++) {
+			  sum = sum + transformedDataset.at<float>(j, k * 5 + i);
+		  }
+		  centroid_transformedDataset.at<float>(j, k) = sum / 5;
+	  }
+  }
+  Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
+  save_pretrained(&centroid_transformedDataset_transpose, &centroidNames, "eigen_ faces_centroid.csv");
+  cout << "Computation done!" << endl;
+
   while(true){
 	cout << "Would you like to save ? y/n: ";
 	char x;
@@ -185,7 +210,19 @@ int train_pca(const string& filename)
 	}
   }
 
+  
+
   return 0;
+}
+
+vector<string> split(const string &s, char delim) {
+	stringstream ss(s);
+	string item;
+	vector<string> tokens;
+	while (getline(ss, item, delim)) {
+		tokens.push_back(item);
+	}
+	return tokens;
 }
 
 

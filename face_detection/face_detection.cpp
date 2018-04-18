@@ -22,6 +22,9 @@ string filename;
 
 string result_recognition;
 
+float x_location;
+float y_location;
+
 // Function main
 int main(void)
 {
@@ -54,6 +57,7 @@ int main(void)
 			// the detected face is 100x100
 			// you may add your NCC code here
 			result_recognition = detect_face(face);
+			putText(frame, result_recognition, cvPoint(x_location, y_location), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
 		}
 		else
 		{
@@ -152,7 +156,9 @@ cv::Mat detectAndDisplay(Mat frame)
 		rectangle(frame, pt1, pt2, Scalar(0, 255, 0), 2, 8, 0);
 
 		/*Print result detection*/
-		putText(frame, result_recognition, cvPoint(faces[ic].x + faces[ic].height / 5, faces[ic].y - 15), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
+		x_location = faces[ic].x + faces[ic].height / 5;
+		y_location = faces[ic].y - 15;
+		//putText(frame, result_recognition, cvPoint(faces[ic].x + faces[ic].height / 5, faces[ic].y - 15), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
 
 	}
 
