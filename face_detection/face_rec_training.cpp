@@ -169,13 +169,13 @@ int train_pca(const string& filename)
   // Concatenate row vector (Will have 10000 * K matrix)
   Mat stacked;
   hconcat(images, stacked);
-  Mat transformedDataset = (pca(stacked)).t();
+  Mat transformedDataset = (pca(stacked));
 
   // transformedDataset will be NUM_EIGEN_FACES x Training Examples matrix
   cout << "Training Done! " << endl;
 
   /*Compute the center of each class*/
-  Mat centroid_transformedDataset(Size(20, 200), CV_32F);
+  Mat centroid_transformedDataset(Size(200, 20), CV_32F);
   vector<string> centroidNames;
 
   cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
@@ -191,16 +191,16 @@ int train_pca(const string& filename)
 	  for (int j = 0; j < 200; j++) {
 		  float sum = 0;
 		  for (int i = 0; i < 5; i++) {
-			  sum = sum + transformedDataset.at<float>(j, k * 5 + i);
+			  sum = sum + transformedDataset.at<float>(k * 5 + i, j);
 			  //cout <<transformedDataset_Transpose.at<float>(k * 5 + i,j) << endl;
 		  }
-		  centroid_transformedDataset.at<float>(j, k) = sum / 5;
+		  centroid_transformedDataset.at<float>(k, j) = sum / 5;
 		  //cout << "Result =" << centroid_transformedDataset.at<float>(k, j) << endl;
 		  //cout << "k=" << k << " j=" << j << endl;
 		  //cout <<"Last val = "<< transformedDataset_Transpose.at<float>(99, 199) << endl;
 	  }
   }
-  cout << "Last val = " << transformedDataset.at<float>(199, 99) << endl;
+  cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
   //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
   save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
   cout << "Computation done!" << endl;
