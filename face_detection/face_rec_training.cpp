@@ -177,8 +177,8 @@ int train_pca(const string& filename)
   Mat centroid_transformedDataset(Size(200, 20), CV_32F);
   vector<string> centroidNames;
 
-  cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
-  cout << "centroid_transformedDataset : rows = " << centroid_transformedDataset.rows << " ; cols = " << centroid_transformedDataset.cols << " ; Size = " << centroid_transformedDataset.size << endl;
+ // cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
+ //cout << "centroid_transformedDataset : rows = " << centroid_transformedDataset.rows << " ; cols = " << centroid_transformedDataset.cols << " ; Size = " << centroid_transformedDataset.size << endl;
 
   for (int k = 0; k < 20; k++) {
 	  vector<string> tokens;
@@ -191,17 +191,14 @@ int train_pca(const string& filename)
 		  float sum = 0;
 		  for (int i = 0; i < 5; i++) {
 			  sum = sum + transformedDataset.at<float>(k * 5 + i, j);
-			  //cout <<transformedDataset_Transpose.at<float>(k * 5 + i,j) << endl;
 		  }
 		  centroid_transformedDataset.at<float>(k, j) = sum / 5;
-		  //cout << "Result =" << centroid_transformedDataset.at<float>(k, j) << endl;
-		  //cout << "k=" << k << " j=" << j << endl;
-		  //cout <<"Last val = "<< transformedDataset_Transpose.at<float>(99, 199) << endl;
 	  }
   }
   cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
   //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
   saved_eigen_faces = transformedDataset;
+
   cout << "Computation done!" << endl;
 	
   while(true){
