@@ -178,8 +178,8 @@ int train_pca(const string& filename)
   Mat centroid_transformedDataset(Size(200, 20), CV_32F);
   vector<string> centroidNames;
 
-  cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
-  cout << "centroid_transformedDataset : rows = " << centroid_transformedDataset.rows << " ; cols = " << centroid_transformedDataset.cols << " ; Size = " << centroid_transformedDataset.size << endl;
+ // cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
+ //cout << "centroid_transformedDataset : rows = " << centroid_transformedDataset.rows << " ; cols = " << centroid_transformedDataset.cols << " ; Size = " << centroid_transformedDataset.size << endl;
 
   for (int k = 0; k < 20; k++) {
 	  vector<string> tokens;
@@ -196,7 +196,6 @@ int train_pca(const string& filename)
 		  centroid_transformedDataset.at<float>(k, j) = sum / 5;
 	  }
   }
-  //cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
   save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
   cout << "Computation done!" << endl;
 
