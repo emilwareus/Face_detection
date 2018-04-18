@@ -57,7 +57,7 @@ int main(void)
 			// the detected face is 100x100
 			// you may add your NCC code here
 			result_recognition = detect_face(face);
-			putText(frame, result_recognition, cvPoint(x_location, y_location), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
+			//putText(frame, result_recognition, cvPoint(x_location, y_location), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
 		}
 		else
 		{
@@ -158,7 +158,7 @@ cv::Mat detectAndDisplay(Mat frame)
 		/*Print result detection*/
 		x_location = faces[ic].x + faces[ic].height / 5;
 		y_location = faces[ic].y - 15;
-		//putText(frame, result_recognition, cvPoint(faces[ic].x + faces[ic].height / 5, faces[ic].y - 15), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
+		putText(frame, result_recognition, cvPoint(faces[ic].x + faces[ic].height / 5, faces[ic].y - 15), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
 
 	}
 

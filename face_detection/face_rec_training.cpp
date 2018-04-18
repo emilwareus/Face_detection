@@ -174,27 +174,35 @@ int train_pca(const string& filename)
   // transformedDataset will be NUM_EIGEN_FACES x Training Examples matrix
   cout << "Training Done! " << endl;
 
-  cout << "Computation of centroid for each individual ... " << endl;
   /*Compute the center of each class*/
-  Mat centroid_transformedDataset(Size(20,200),CV_32F);
+  Mat centroid_transformedDataset(Size(20, 200), CV_32F);
   vector<string> centroidNames;
-  Mat transformedDataset_Transpose = transformedDataset.t();
+
+  cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
+  cout << "centroid_transformedDataset : rows = " << centroid_transformedDataset.rows << " ; cols = " << centroid_transformedDataset.cols << " ; Size = " << centroid_transformedDataset.size << endl;
+
   for (int k = 0; k < 20; k++) {
 	  vector<string> tokens;
 	  tokens = split(names[k * 5], '_');
 	  string name = tokens[0];
 	  centroidNames.push_back(name);
+
 	  // Extract the name
 	  for (int j = 0; j < 200; j++) {
 		  float sum = 0;
 		  for (int i = 0; i < 5; i++) {
 			  sum = sum + transformedDataset.at<float>(j, k * 5 + i);
+			  //cout <<transformedDataset_Transpose.at<float>(k * 5 + i,j) << endl;
 		  }
 		  centroid_transformedDataset.at<float>(j, k) = sum / 5;
+		  //cout << "Result =" << centroid_transformedDataset.at<float>(k, j) << endl;
+		  //cout << "k=" << k << " j=" << j << endl;
+		  //cout <<"Last val = "<< transformedDataset_Transpose.at<float>(99, 199) << endl;
 	  }
   }
-  Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
-  save_pretrained(&centroid_transformedDataset_transpose, &centroidNames, "eigen_faces_centroid.csv");
+  cout << "Last val = " << transformedDataset.at<float>(199, 99) << endl;
+  //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
+  save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
   cout << "Computation done!" << endl;
 
   while(true){
@@ -213,8 +221,7 @@ int train_pca(const string& filename)
 		break;
 	}
   }
-
-
+  cout << "Computation of centroid for each individual ... " << endl;
 
   return 0;
 }
