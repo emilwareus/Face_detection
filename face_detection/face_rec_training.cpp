@@ -200,7 +200,7 @@ int train_pca(const string& filename)
 		  //cout <<"Last val = "<< transformedDataset_Transpose.at<float>(99, 199) << endl;
 	  }
   }
-  cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
+  //cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
   //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
   save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
   cout << "Computation done!" << endl;
