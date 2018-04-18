@@ -77,7 +77,7 @@ void init() {
 		else if (x == 2) {
 			cout << "Let's use the exesting database" << endl;
 			load_matrix_from_csv("eigenspace.csv", &eigenspace);
-			laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
 			load_matrix_from_csv("mean.csv", &mean_face);
 			
 			break;
@@ -97,8 +97,6 @@ String detect_face(Mat face) {
     return "";
 }
 	Mat test_face = get_eigen_face(resized, eigenspace);
-	// cout << "eigen_faces_dims " << saved_eigen_faces.rows << " " << saved_eigen_faces.cols << endl;
-	// cout << "test_face " << test_face.rows << " " << test_face.cols << endl;
 	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
 	cout << labels[test_distance] << endl;
 	return labels[test_distance];
@@ -106,11 +104,12 @@ String detect_face(Mat face) {
 
 // Projects face onto eigenspace (Subtracts from mean first)
 Mat get_eigen_face(Mat input_face, Mat eigenspace) {
+	cout << eigenspace.rows << "  " << eigenspace.cols << endl;
 	if (input_face.cols != 1 && input_face.rows != 1) {
-		input_face = input_face.reshape(1, 1).t();
+		input_face = input_face.reshape(1, 1);
 	}
-	Mat meanSubtracted = input_face - mean_face; 
-	Mat out = meanSubtracted.t() * eigenspace;
+	Mat meanSubtracted = input_face - mean_face.t(); 
+	Mat out = meanSubtracted * eigenspace;
 	return out;
 }
 
@@ -159,7 +158,7 @@ int train_pca(const string& filename)
        Mat im;
        raw_im.convertTo(im, CV_32F);
        Mat resized;
-       resize(im, resized, Size(100,100), 0, 0);
+       resize(im, resized, Size(100, 100), 0, 0);
        // Flatten image to column vector
        Mat flattened = resized.reshape(1,1).t();
        images.push_back(flattened);
@@ -320,13 +319,13 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 
 	//Getting first distance
 	Mat temp;
-	pow((eigen_faces.col(0) - input_face), 2, temp);
+	pow((eigen_faces.row(0) - input_face), 2, temp);
 	cv::Scalar temp_dist = cv::sum(temp);
 	float dist = float(temp_dist[0]);
 	int index = 0;
-    for (int i = 1; i < eigen_faces.cols; i++) {
+    for (int i = 1; i < eigen_faces.rows; i++) {
 		Mat temp;
-		pow((eigen_faces.col(i) - input_face), 2, temp);
+		pow((eigen_faces.row(i) - input_face), 2, temp);
 		cv::Scalar temp_dist = cv::sum(temp);
 		if (float(temp_dist[0]) < dist) {
 			dist = float(temp_dist[0]);
