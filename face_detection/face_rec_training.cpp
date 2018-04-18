@@ -99,7 +99,7 @@ String detect_face(Mat face) {
 	Mat test_face = get_eigen_face(resized, eigenspace);
 	// cout << "eigen_faces_dims " << saved_eigen_faces.rows << " " << saved_eigen_faces.cols << endl;
 	// cout << "test_face " << test_face.rows << " " << test_face.cols << endl;
-	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
+	int test_distance = euclidean_distance(saved_eigen_faces, test_face.t());
 	cout << labels[test_distance] << endl;
 	return labels[test_distance];
 }
@@ -195,8 +195,6 @@ int train_pca(const string& filename)
 		  centroid_transformedDataset.at<float>(k, j) = sum / 5;
 	  }
   }
-  cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
-  //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
   saved_eigen_faces = transformedDataset;
 
   cout << "Computation done!" << endl;
