@@ -85,6 +85,28 @@ void init() {
 	}
 }
 
+
+void init() {
+	while (true) {
+		cout << "Press 1 to train and 2 to lauch recognition on camera? ";
+		int x;
+		cin >> x;
+		cout << endl;
+		if (x == 1) {
+			train_pca("eigen_faces.csv");
+			break;
+		}
+		else if (x == 2) {
+			cout << "Let's use the exesting database" << endl;
+			load_matrix_from_csv("eigenspace.csv", &eigenspace);
+			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
+			load_matrix_from_csv("mean.csv", &mean_face);
+			
+			break;
+		}
+	}
+}
+
 String detect_face(Mat face) {
 	Mat input_face_float;
 	face.convertTo(input_face_float, CV_32F);
@@ -166,6 +188,7 @@ int train_pca(const string& filename)
        images.push_back(flattened);
   }
 
+  labels = names; 
   // Concatenate row vector (Will have 10000 * K matrix)
   Mat stacked;
   hconcat(images, stacked);
