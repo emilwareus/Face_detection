@@ -192,16 +192,11 @@ int train_pca(const string& filename)
 		  float sum = 0;
 		  for (int i = 0; i < 5; i++) {
 			  sum = sum + transformedDataset.at<float>(k * 5 + i, j);
-			  //cout <<transformedDataset_Transpose.at<float>(k * 5 + i,j) << endl;
 		  }
 		  centroid_transformedDataset.at<float>(k, j) = sum / 5;
-		  //cout << "Result =" << centroid_transformedDataset.at<float>(k, j) << endl;
-		  //cout << "k=" << k << " j=" << j << endl;
-		  //cout <<"Last val = "<< transformedDataset_Transpose.at<float>(99, 199) << endl;
 	  }
   }
   //cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
-  //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
   save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
   cout << "Computation done!" << endl;
 
