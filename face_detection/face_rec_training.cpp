@@ -78,8 +78,9 @@ void init() {
 		else if (x == 2) {
 			cout << "Let's use the exesting database" << endl;
 			load_matrix_from_csv("eigenspace.csv", &eigenspace);
-			//laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
-			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
+			// laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+			laod_pretrained("eigen_ faces_centroid.csv", &saved_eigen_faces, &labels);
+			saved_eigen_faces = saved_eigen_faces.t();
 			load_matrix_from_csv("mean.csv", &mean_face);
 			break;
 		}
@@ -98,7 +99,10 @@ String detect_face(Mat face) {
     return "";
 }
 	Mat test_face = get_eigen_face(resized, eigenspace);
+	// cout << "eigen_faces_dims " << saved_eigen_faces.rows << " " << saved_eigen_faces.cols << endl;
+	// cout << "test_face " << test_face.rows << " " << test_face.cols << endl;
 	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
+	cout << labels[test_distance] << endl;
 	return labels[test_distance];
 }
 
@@ -180,7 +184,7 @@ int train_pca(const string& filename)
 	  tokens = split(names[k * 5], '_');
 	  string name = tokens[0];
 	  centroidNames.push_back(name);
-	  // Extract the name 
+	  // Extract the name
 	  for (int j = 0; j < 200; j++) {
 		  float sum = 0;
 		  for (int i = 0; i < 5; i++) {
@@ -190,7 +194,7 @@ int train_pca(const string& filename)
 	  }
   }
   Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
-  save_pretrained(&centroid_transformedDataset_transpose, &centroidNames, "eigen_ faces_centroid.csv");
+  save_pretrained(&centroid_transformedDataset_transpose, &centroidNames, "eigen_faces_centroid.csv");
   cout << "Computation done!" << endl;
 
   while(true){
@@ -210,7 +214,7 @@ int train_pca(const string& filename)
 	}
   }
 
-  
+
 
   return 0;
 }
@@ -321,9 +325,11 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 		if (float(temp_dist[0]) < dist) {
 			dist = float(temp_dist[0]);
 			index = i;
+			// cout << i << "    ";
 		}
 
     }
+		// cout << dist << endl;
 
 	return index;
 
