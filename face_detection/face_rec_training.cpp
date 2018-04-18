@@ -25,7 +25,6 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 void laod_pretrained(const string& filename, Mat *values, vector<string> * labels);
 int euclidean_distance(Mat eigen_faces, Mat  input_face);
 Mat get_eigen_face(Mat input_face, Mat eigenspace);
-void save_eigenspace(vector<Mat> eigenfaces, const string& filename);
 void load_matrix_from_csv(const string& filename, Mat *eigenspace);
 void save_mean(Mat mean, const string& filename);
 vector<string> split(const string &s, char delim);
@@ -78,10 +77,9 @@ void init() {
 		else if (x == 2) {
 			cout << "Let's use the exesting database" << endl;
 			load_matrix_from_csv("eigenspace.csv", &eigenspace);
-			// laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
-			laod_pretrained("eigen_ faces_centroid.csv", &saved_eigen_faces, &labels);
-			saved_eigen_faces = saved_eigen_faces.t();
+			laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
 			load_matrix_from_csv("mean.csv", &mean_face);
+			
 			break;
 		}
 	}
@@ -111,8 +109,9 @@ Mat get_eigen_face(Mat input_face, Mat eigenspace) {
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1).t();
 	}
-  Mat meanSubtracted = input_face - mean_face;
-  return eigenspace * meanSubtracted;
+	Mat meanSubtracted = input_face - mean_face; 
+	Mat out = meanSubtracted.t() * eigenspace;
+	return out;
 }
 
 
@@ -202,9 +201,9 @@ int train_pca(const string& filename)
   }
   cout << "Last val = " << transformedDataset.at<float>(99, 199) << endl;
   //Mat centroid_transformedDataset_transpose = centroid_transformedDataset.t();
-  save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
+  saved_eigen_faces = transformedDataset;
   cout << "Computation done!" << endl;
-
+	
   while(true){
 	cout << "Would you like to save ? y/n: ";
 	char x;
@@ -212,8 +211,14 @@ int train_pca(const string& filename)
 	cout << endl;
 	if (x == 'y') {
 
-		save_pretrained(&transformedDataset, &names, filename);
+		
+		save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
+		save_pretrained(&saved_eigen_faces, &names, filename);
+		save_mean(eigenspace, "eigenspace.csv");
+		save_mean(mean_face, "mean.csv");
 		cout << "Eigen-faces saved to "<< filename << endl;
+
+
 		break;
 	}
 	else if(x == 'n'){
@@ -249,7 +254,7 @@ Mat subtractMean(Mat mat, bool isColumnMean) {
     repeated = repeat(columnMean, 1, mat.cols);
     subtract(mat, repeated, meanSubtracted);
     // Save the mean for future use
-    save_mean(columnMean, "mean.csv");
+	mean_face = columnMean;
   } else {
     // Not actually used, but for completeness
     Mat rowMean;
@@ -298,14 +303,11 @@ Mat pca(Mat mat, bool isColumnFeatures) {
     Mat face = eigenvecs.row(i).t();
     eigenfaces.push_back(face);
   }
-  // Save eigenspace for future usage
-  save_eigenspace(eigenfaces, "eigenspace.csv");
-  // Concatenates the eigenfaces
-  Mat principleEigenfaces;
-  hconcat(eigenfaces, principleEigenfaces);
 
+  // Concatenates the eigenfaces 
+  hconcat(eigenfaces, eigenspace);
   // Rduce dataset to the EIGEN_FACE_COUNT dimensions
-  Mat datasetReduced = meanSubtracted.t() * principleEigenfaces;
+  Mat datasetReduced = meanSubtracted.t() * eigenspace;
   return datasetReduced;
 }
 
@@ -490,24 +492,7 @@ void save_mean(Mat mean, const string& filename) {
   }
   myfile.close();
 }
-void save_eigenspace(vector<Mat> eigenfaces, const string& filename) {
-  ofstream myfile;
-  myfile.open(filename);
-	int rows = eigenfaces.size();
-	int cols = eigenfaces[0].rows;
-	myfile << (cols + 1) << "\n";
-	myfile << rows << "\n";
-  for (int i = 0; i < eigenfaces.size(); i++) {
-    for (int j =0; j < eigenfaces[i].rows; j++) {
-      myfile << eigenfaces[i].at<float>(j, 0);
-			if (j < eigenfaces[i].rows- 1) {
-				myfile << ";";
-			}
-    }
-		myfile << "\n";
-  }
-  myfile.close();
-}
+
 /*
 @filname is the relative path to the file
 @*save_matrix is a pointer to the matrix with eigen-faces (&values)
