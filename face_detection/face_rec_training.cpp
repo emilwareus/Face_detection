@@ -30,10 +30,12 @@ void save_mean(Mat mean, const string& filename);
 vector<string> split(const string &s, char delim);
 
 const string searchPattern = "train_images/*.jpg";
+const string filename = "eigen_faces.csv";
 Mat saved_eigen_faces;
+Mat saved_eigen_faces_centroids;
 Mat eigenspace;
 Mat mean_face;
-vector<string> labels;
+vector<string> labels, labels_centroid;
 
 
 // int main(int argc, const char** argv) {
@@ -64,6 +66,7 @@ vector<string> labels;
 // }
 
 
+
 void init() {
 	while (true) {
 		cout << "Press 1 to train and 2 to lauch recognition on camera? ";
@@ -77,33 +80,25 @@ void init() {
 		else if (x == 2) {
 			cout << "Let's use the exesting database" << endl;
 			load_matrix_from_csv("eigenspace.csv", &eigenspace);
-			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
+			laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
+			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces_centroids, &labels_centroid);
 			load_matrix_from_csv("mean.csv", &mean_face);
-			
 			break;
 		}
+
+
 	}
-}
-
-
-void init() {
-	while (true) {
-		cout << "Press 1 to train and 2 to lauch recognition on camera? ";
-		int x;
-		cin >> x;
-		cout << endl;
-		if (x == 1) {
-			train_pca("eigen_faces.csv");
-			break;
-		}
-		else if (x == 2) {
-			cout << "Let's use the exesting database" << endl;
-			load_matrix_from_csv("eigenspace.csv", &eigenspace);
-			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
-			load_matrix_from_csv("mean.csv", &mean_face);
-			
-			break;
-		}
+	cout << "Would you like to use Centroids(1) or Normal(2) training-set?";
+	int k;
+	cin >> k;
+	cout << endl;
+	if (k == 1) {
+		cout << "Using Centroids" << endl;
+		saved_eigen_faces = saved_eigen_faces_centroids;
+		labels = labels_centroid;
+	}
+	else {
+		cout << "Using Normal" << endl;
 	}
 }
 
@@ -128,7 +123,7 @@ String detect_face(Mat face) {
 
 // Projects face onto eigenspace (Subtracts from mean first)
 Mat get_eigen_face(Mat input_face, Mat eigenspace) {
-	cout << eigenspace.rows << "  " << eigenspace.cols << endl;
+	//cout << eigenspace.rows << "  " << eigenspace.cols << endl;
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1);
 	}
@@ -220,7 +215,8 @@ int train_pca(const string& filename)
 	  }
   }
   saved_eigen_faces = transformedDataset;
-
+  saved_eigen_faces_centroids = centroid_transformedDataset;
+  labels_centroid = centroidNames;
   cout << "Computation done!" << endl;
 	
   while(true){
@@ -350,6 +346,7 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 		Mat temp;
 		pow((eigen_faces.row(i) - input_face), 2, temp);
 		cv::Scalar temp_dist = cv::sum(temp);
+		cout << temp_dist[0] << "  " << labels[index];
 		if (float(temp_dist[0]) < dist) {
 			dist = float(temp_dist[0]);
 			index = i;
@@ -531,7 +528,6 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 	for (int i = 0; i < rows; i++) {
 		//cout << (*labels)[i] << ";";
 		myfile << (*labels)[i] << ";";
-		cout << (*labels)[i] << endl;
 		for (int j = 0; j < cols; j++) {
 			//cout << (*save_matrix).at<float>(i, j) << ";";
 			myfile << (*save_matrix).at<float>(i, j);
