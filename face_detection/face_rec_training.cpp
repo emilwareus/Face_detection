@@ -37,36 +37,7 @@ Mat eigenspace;
 Mat mean_face;
 vector<string> labels, labels_centroid;
 
-
-// int main(int argc, const char** argv) {
-//   // Uncomment this if you need to train
-// 	// train_pca("eigen_faces.csv");
-//
-//   // Loads the mean, eigenspace, precomputed eigenfaces
-//   load_matrix_from_csv("eigenspace.csv", &eigenspace);
-// 	laod_pretrained("eigen_faces.csv", &saved_eigen_faces, &labels);
-// 	load_matrix_from_csv("mean.csv", &mean_face);
-//
-//   // Use a dummy example: Convert to float and resize
-//   Mat input_face = imread("Barack Obama_0.jpg", 0);
-//   Mat input_face_float;
-//   input_face.convertTo(input_face_float, CV_32F);
-//   Mat resized;
-//   resize(input_face_float, resized, Size(100,100), 0, 0);
-//
-//   // Project the face onto eigenspace
-//   Mat test_face = get_eigen_face(resized, eigenspace);
-//
-//   // Show prediction
-// 	int test_distace = euclidean_distance(saved_eigen_faces, test_face);
-// 	cout << "Predicted face : " << labels[test_distace] << endl;
-// 	char x;
-// 	cin >> x;
-//
-// }
-
-
-
+// Determine if we should train or perform recognition
 void init() {
 	while (true) {
 		cout << "Press 1 to train and 2 to use the existing training data set? ";
@@ -95,6 +66,7 @@ void init() {
 	int k;
 	cin >> k;
 	cout << endl;
+	// Using the centroid dataset
 	if (k == 1) {
 		cout << "Using Centroids" << endl;
 		saved_eigen_faces = saved_eigen_faces_centroids;
@@ -105,28 +77,27 @@ void init() {
 	}
 }
 
+// Detect the faces
 String detect_face(Mat face) {
 	Mat input_face_float;
 	face.convertTo(input_face_float, CV_32F);
 	Mat resized;
   try {
-	resize(input_face_float, resized, Size(100, 100), 0, 0);
-} catch( cv::Exception& e ) {
-  const char* err_msg = e.what();
+		resize(input_face_float, resized, Size(100, 100), 0, 0);
+	} catch( cv::Exception& e ) {
+		// Catch the exception
+  	const char* err_msg = e.what();
     std::cout << "exception caught 2: " << err_msg << std::endl;
     return "";
-}
+	}
+	// Get the eigen face and return the test distance
 	Mat test_face = get_eigen_face(resized, eigenspace);
-
 	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
-
-	cout << labels[test_distance] << endl;
 	return labels[test_distance];
 }
 
 // Projects face onto eigenspace (Subtracts from mean first)
 Mat get_eigen_face(Mat input_face, Mat eigenspace) {
-	//cout << eigenspace.rows << "  " << eigenspace.cols << endl;
 	if (input_face.cols != 1 && input_face.rows != 1) {
 		input_face = input_face.reshape(1, 1);
 	}
@@ -198,10 +169,6 @@ int train_pca(const string& filename)
   /*Compute the center of each class*/
   Mat centroid_transformedDataset(Size(200, 20), CV_32F);
   vector<string> centroidNames;
-
- // cout << "transformedDataset : rows = " << transformedDataset.rows << " ; cols = " << transformedDataset.cols << " ; Size = " << transformedDataset.size << endl;
- //cout << "centroid_transformedDataset : rows = " << centroid_transformedDataset.rows << " ; cols = " << centroid_transformedDataset.cols << " ; Size = " << centroid_transformedDataset.size << endl;
-
   for (int k = 0; k < 20; k++) {
 	  vector<string> tokens;
 	  tokens = split(names[k * 5], '_');
@@ -217,50 +184,37 @@ int train_pca(const string& filename)
 		  centroid_transformedDataset.at<float>(k, j) = sum / 5;
 	  }
   }
+
   saved_eigen_faces = transformedDataset;
   saved_eigen_faces_centroids = centroid_transformedDataset;
   labels_centroid = centroidNames;
   cout << "Computation done!" << endl;
 	
-  while(true){
-	cout << "Would you like to save ? y/n: ";
-	char x;
-	cin >> x;
-	cout << endl;
-	if (x == 'y') {
-
-		
-		save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
-		save_pretrained(&saved_eigen_faces, &names, filename);
-		save_mean(eigenspace, "eigenspace.csv");
-		save_mean(mean_face, "mean.csv");
-		cout << "Eigen-faces saved to "<< filename << endl;
-
-
-		break;
-	}
-	else if(x == 'n'){
-		cout << "Ok.. Goodbye" << endl;
-		break;
-	}
+  while(true) {
+		cout << "Would you like to save ? y/n: ";
+		char x;
+		cin >> x;
+		cout << endl;
+		if (x == 'y') {
+			// Save the centrood file and also the full eigenface dataset
+			save_pretrained(&centroid_transformedDataset, &centroidNames, "eigen_faces_centroid.csv");
+			save_pretrained(&saved_eigen_faces, &names, filename);
+			save_mean(eigenspace, "eigenspace.csv");
+			save_mean(mean_face, "mean.csv");
+			cout << "Eigen-faces saved to "<< filename << endl;
+			break;
+		}
+		else if(x == 'n'){
+			cout << "Ok.. Goodbye" << endl;
+			break;
+		}
   }
   cout << "Computation of centroid for each individual ... " << endl;
-
   return 0;
 }
 
-vector<string> split(const string &s, char delim) {
-	stringstream ss(s);
-	string item;
-	vector<string> tokens;
-	while (getline(ss, item, delim)) {
-		tokens.push_back(item);
-	}
-	return tokens;
-}
 
-
-// For a NxM matrix, subtracts the columwise mean from all M columns
+// For a NxM matrix, subtracts the column-wise or row-wise mean from all M columns
 Mat subtractMean(Mat mat, bool isColumnMean) {
   Mat meanSubtracted;
   if (isColumnMean) {
@@ -290,7 +244,6 @@ Mat subtractMean(Mat mat, bool isColumnMean) {
 Mat covMatrix(Mat mat) {
   Mat covar;
   covar = (1.0/(mat.cols)) * (mat * mat.t());
-  cout << "CovRows : " <<covar.rows << ",  CovCols : " << covar.cols << endl;
   return covar;
 }
 
@@ -308,17 +261,12 @@ Mat pca(Mat mat, bool isColumnFeatures) {
   cout << "Calculating eigen..." << endl;
   eigen(covariance, eigenvals, eigenvecs);
   cout << "Eigen Done!" << endl;
-  // Print some eigenvalues for sanity check
-  cout << "Some Eigen Values: " << endl;
-  for (int i = 0; i < 5; i++) {
-    cout << eigenvals.at<float>(i, 0) << "   " << endl;
-  }
 
   // Take the top EIGEN_FACE_COUNT eigenfaces (Already sorted)
   cout << "Let's take the " << EIGEN_FACE_COUNT << " largest eigen-face values " << endl;
   vector<Mat> eigenfaces;
   for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
-    Mat face = eigenvecs.row(i).t();
+    Mat face = eigenvecs.col(i);
     eigenfaces.push_back(face);
   }
 
@@ -346,19 +294,14 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 	float dist = float(temp_dist[0]);
 	int index = 0;
     for (int i = 1; i < eigen_faces.rows; i++) {
-		Mat temp;
-		pow((eigen_faces.row(i) - input_face), 2, temp);
-		cv::Scalar temp_dist = cv::sum(temp);
-		cout << temp_dist[0] << "  " << labels[index];
-		if (float(temp_dist[0]) < dist) {
-			dist = float(temp_dist[0]);
-			index = i;
-			// cout << i << "    ";
-		}
-
+			Mat temp;
+			pow((eigen_faces.row(i) - input_face), 2, temp);
+			cv::Scalar temp_dist = cv::sum(temp);
+			if (float(temp_dist[0]) < dist) {
+				dist = float(temp_dist[0]);
+				index = i;
+			}
     }
-		// cout << dist << endl;
-
 	return index;
 
 }
@@ -368,6 +311,17 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
  * File I/O Functions
  *
  *************************/
+ // Utility for dealing with strings
+ vector<string> split(const string &s, char delim) {
+ 	stringstream ss(s);
+ 	string item;
+ 	vector<string> tokens;
+ 	while (getline(ss, item, delim)) {
+ 		tokens.push_back(item);
+ 	}
+ 	return tokens;
+ }
+ 
 // Loads a matrix from a csv file
 void load_matrix_from_csv(const string& filename, Mat *space) {
 	string line;
@@ -444,7 +398,6 @@ void laod_pretrained(const string& filename, Mat *values, vector<string> * label
 	string delimiter = ";";
 	string token, token_row;
 
-
 	getline(file, line, ',');
 	int col = stoi(line.substr(0, line.find(delimiter)));
 	string test = line.substr(0, line.find("\n"));
@@ -452,13 +405,9 @@ void laod_pretrained(const string& filename, Mat *values, vector<string> * label
 	int row = stoi(line.substr(0, line.find(delimiter)));
 	test = line.substr(0, line.find("\n") + 1);
 	line.erase(0, line.find("\n") + 1);
-
-
+	
 	Mat temp_values = cv::Mat(row, col -1, CV_32F);
-
-
 	vector<vector<string> > output_matrix(row, vector<string>(col));
-
 
 	int i = 0;
 	size_t pos_row = 0;
@@ -529,16 +478,13 @@ void save_pretrained(Mat *save_matrix, vector<string> * labels, const string& fi
 
 
 	for (int i = 0; i < rows; i++) {
-		//cout << (*labels)[i] << ";";
 		myfile << (*labels)[i] << ";";
 		for (int j = 0; j < cols; j++) {
-			//cout << (*save_matrix).at<float>(i, j) << ";";
 			myfile << (*save_matrix).at<float>(i, j);
 			if (j < cols - 1) {
 				myfile << ";";
 			}
 		}
-		//cout << endl;
 		myfile << "\n";
 	}
 	myfile.close();

@@ -56,7 +56,7 @@ int main(void)
 			//std::cout << "Pixel coordinate: (10, 20)= " << pixel << std::endl;
 			// the detected face is 100x100
 			// you may add your NCC code here
-			result_recognition = detect_face(face);
+			
 			//putText(frame, result_recognition, cvPoint(x_location, y_location), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
 		}
 		else
@@ -141,7 +141,7 @@ cv::Mat detectAndDisplay(Mat frame)
   }
 		cvtColor(res, gray, CV_BGR2GRAY); // Convert cropped image to Grayscale
 
-		/*
+		
 		// Form a filename
 		filename = "";
 		stringstream ssfn;
@@ -149,15 +149,17 @@ cv::Mat detectAndDisplay(Mat frame)
 		filename = ssfn.str();
 
 		imwrite(filename, gray);
-		*/
+		
 
 		Point pt1(faces[ic].x, faces[ic].y); // Display detected faces on main window - live stream from camera
 		Point pt2((faces[ic].x + faces[ic].height), (faces[ic].y + faces[ic].width));
 		rectangle(frame, pt1, pt2, Scalar(0, 255, 0), 2, 8, 0);
 
 		/*Print result detection*/
-		x_location = faces[ic].x + faces[ic].height / 5;
-		y_location = faces[ic].y - 15;
+		//x_location = faces[ic].x + faces[ic].height / 5;
+		//y_location = faces[ic].y - 15;
+		//imshow("original", frame);
+		result_recognition = detect_face(gray);
 		putText(frame, result_recognition, cvPoint(faces[ic].x + faces[ic].height / 5, faces[ic].y - 15), FONT_HERSHEY_COMPLEX_SMALL, 1.5, cvScalar(255, 0, 0), 1, CV_AA);
 
 	}
