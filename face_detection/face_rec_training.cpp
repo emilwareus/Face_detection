@@ -120,7 +120,7 @@ String detect_face(Mat face) {
 
 	int test_distance = euclidean_distance(saved_eigen_faces, test_face);
 
-	cout << labels[test_distance] << endl;
+	//cout << labels[test_distance] << endl;
 	return labels[test_distance];
 }
 
@@ -318,7 +318,7 @@ Mat pca(Mat mat, bool isColumnFeatures) {
   cout << "Let's take the " << EIGEN_FACE_COUNT << " largest eigen-face values " << endl;
   vector<Mat> eigenfaces;
   for (int i = 0; i < EIGEN_FACE_COUNT; i++) {
-    Mat face = eigenvecs.row(i).t();
+    Mat face = eigenvecs.col(i);
     eigenfaces.push_back(face);
   }
 
@@ -349,7 +349,7 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 		Mat temp;
 		pow((eigen_faces.row(i) - input_face), 2, temp);
 		cv::Scalar temp_dist = cv::sum(temp);
-		cout << temp_dist[0] << "  " << labels[index];
+		//cout << temp_dist[0] << "  " << labels[index];
 		if (float(temp_dist[0]) < dist) {
 			dist = float(temp_dist[0]);
 			index = i;
@@ -357,7 +357,7 @@ int euclidean_distance(Mat eigen_faces, Mat  input_face) {
 		}
 
     }
-		// cout << dist << endl;
+	cout << dist << endl;
 
 	return index;
 
