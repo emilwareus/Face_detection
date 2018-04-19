@@ -66,16 +66,19 @@ vector<string> labels;
 
 void init() {
 	while (true) {
-		cout << "Press 1 to train and 2 to lauch recognition on camera? ";
+		cout << "Press 1 to train and 2 to use the existing training data set? ";
 		int x;
 		cin >> x;
 		cout << endl;
 		if (x == 1) {
 			train_pca("eigen_faces.csv");
+			load_matrix_from_csv("eigenspace.csv", &eigenspace);
+			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
+			load_matrix_from_csv("mean.csv", &mean_face);
 			break;
 		}
 		else if (x == 2) {
-			cout << "Let's use the exesting database" << endl;
+			cout << "Let's use the existing database" << endl;
 			load_matrix_from_csv("eigenspace.csv", &eigenspace);
 			laod_pretrained("eigen_faces_centroid.csv", &saved_eigen_faces, &labels);
 			load_matrix_from_csv("mean.csv", &mean_face);
